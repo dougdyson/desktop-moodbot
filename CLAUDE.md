@@ -124,11 +124,54 @@ Start with Claude Code support only.
 
 ## Hardware Target
 
-- **Display**: M5Stack CoreInk — 200×200px black/white e-ink, ESP32-PICO-D4, WiFi, battery
+- **Display**: M5Stack CoreInk — 200×200px black/white e-ink, ESP32-PICO-D4, WiFi, 390mAh battery
 - **Housing**: 3D printed (Creality Ender 3), brand-colored per agent
 - Simple mascot/smiley style faces, generated not hand-drawn
 - Activity shown through expression (eyes scanning = reading, mouth open = talking)
 - Emotion shown through valence (smile vs frown, relaxed vs tense)
+
+## ESP32 Communication Protocol
+
+### Endpoint
+ESP32 polls `GET /mood/<agent>` (e.g. `/mood/claude-code`). Returns:
+```json
+{
+  "activity": "thinking",
+  "emotion": "positive",
+  "variant": 2,
+  "timestamp": "2026-02-20T14:30:00Z",
+  "sleeping": false,
+  "bitmap": null
+}
+```
+
+### Image Transfer
+- ~40 sprites preloaded on ESP32 flash (~200KB, ESP32 has 4MB+)
+- `bitmap: null` → use preloaded sprite (activity/emotion/variant lookup)
+- `bitmap: "<base64>"` → server-sent override (~5KB), enables face updates without firmware push
+
+### Discovery
+- **mDNS primary**: server advertises as `moodbot.local`, zero config for users
+- **IP fallback**: hold side button on boot → config AP → set static IP via web page
+
+### WiFi Dropout
+1. Connected → normal mood display
+2. Briefly disconnected (< 5 min) → hold last state (e-ink retains image at zero power)
+3. Offline (> 5 min) → show offline/disconnected face
+
+### OTA Firmware Updates
+- ESP32 checks `GET /firmware/latest?device=<agent>` on boot
+- If newer version available, downloads and installs (standard ESP32 HTTP OTA)
+
+### Power Management
+- **USB powered** (primary): poll every 30 seconds
+- **Battery mode** (detected by voltage): deep sleep between polls, wake every 2-3 min
+- Deep sleep ~10μA → battery lasts days; e-ink holds image at zero power
+
+### Sleep Mode
+- 30 min of no JSONL activity → server returns `sleeping: true`
+- ESP32 shows sleep face, reduces polling to every 5 minutes
+- First new activity wakes on next poll
 
 ## Design Principles
 
