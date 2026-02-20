@@ -163,7 +163,7 @@ class ClaudeCodeParser(AgentParser):
     def _is_tool_call_boilerplate(self, text: str) -> bool:
         if TOOL_CALL_XML.search(text):
             return True
-        if len(text) < 200 and TOOL_PREAMBLE.match(text) and TOOL_KEYWORDS.search(text):
+        if len(text) < 80 and TOOL_PREAMBLE.match(text) and TOOL_KEYWORDS.search(text):
             return True
         return False
 
