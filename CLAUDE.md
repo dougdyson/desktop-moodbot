@@ -185,11 +185,31 @@ When creating todos via MCP server:
 - ALWAYS set `task_type: "personal"`
 - Vacation mode filters out work tasks from the UI
 
-**Linking todos to this project:** After creating via MCP, link to the Desktop Mood Bot project entity:
+**Linking todos to this project:** After creating via MCP, do TWO things:
+
+1. Link to the Desktop Mood Bot project entity:
 ```sql
 INSERT INTO entity_relationships (from_entity_id, to_entity_id, relationship_type)
 VALUES ('<new_todo_entity_id>', 'f50748b6-74e9-4ee0-a344-91ad9b63cee9', 'belongs_to');
 ```
+
+2. Add to the frontlog (if it's an active priority) via REST endpoint:
+```bash
+# Get current frontlog
+curl http://localhost:8765/v1/frontlog
+
+# Replace frontlog with new ordered list
+curl -X POST http://localhost:8765/v1/frontlog \
+  -H "Content-Type: application/json" \
+  -d '[{"item_type": "todo", "task_number": 1152}, {"item_type": "todo", "task_number": 1161}]'
+```
+
+Other useful frontlog endpoints:
+- `POST /v1/frontlog/autofill` — auto-populate with ranked items
+- `POST /v1/frontlog/refresh` — rebuild from scratch
+- `POST /v1/frontlog/dismiss` — "not right now" with TTL
+
+The frontlog is a **curated, ordered list** — creating a todo and linking it to the project does NOT automatically add it to the frontlog. The frontlog is what drives the ziggy-web UI and session planning.
 
 Project entity ID: `f50748b6-74e9-4ee0-a344-91ad9b63cee9`
 
