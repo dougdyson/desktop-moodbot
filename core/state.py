@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from parsers.base import Activity, ParsedMessage, ParsedSession
+from sprites.manifest import SpriteManifest
 from .sentiment import EmotionBand, SentimentScorer
 
 VARIANT_COUNTS = {
@@ -38,9 +39,11 @@ class MoodState:
 
 
 class MoodEngine:
-    def __init__(self, sleep_timeout: int = SLEEP_TIMEOUT_SECONDS):
+    def __init__(self, sleep_timeout: int = SLEEP_TIMEOUT_SECONDS,
+                 sprites: Optional[SpriteManifest] = None):
         self.scorer = SentimentScorer()
         self.sleep_timeout = sleep_timeout
+        self.sprites = sprites or SpriteManifest()
         self._last_activity = Activity.THINKING
         self._last_variant: dict[tuple[str, str], int] = {}
 
@@ -58,6 +61,10 @@ class MoodEngine:
 
         variant = self._pick_variant(activity, emotion)
 
+        bitmap = self.sprites.lookup(
+            activity.value, emotion.value, variant, sleeping=sleeping
+        )
+
         now = datetime.now(timezone.utc).isoformat()
 
         return MoodState(
@@ -66,6 +73,7 @@ class MoodEngine:
             variant=variant,
             timestamp=now,
             sleeping=sleeping,
+            bitmap=bitmap,
         )
 
     def _is_sleeping(self, session: ParsedSession) -> bool:
