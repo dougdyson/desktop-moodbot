@@ -24,19 +24,31 @@ Desktop Mood Bot (DTMB) is a standalone, lightweight Python service that reads A
 
 This is an **open-source product**. No database, no Ziggy dependency, no kokoro-tts dependency.
 
+## Key Design Decision: One Device Per Agent
+
+Each moodbot is dedicated to a **single agent**. A Claude Code moodbot only shows Claude Code mood. An OpenClaw moodbot only shows OpenClaw mood. Users collect the ones matching the agents they use.
+
+This means:
+- No cross-agent arbitration ("which agent should I show?")
+- Each agent has its own watcher, parser, and HTTP endpoint
+- Devices are fully independent: `GET /mood/claude-code`, `GET /mood/openclaw`
+- Each ESP32 is flashed knowing which agent it represents, polls its own endpoint
+- Adding a new agent = new parser file + new route. Scoring pipeline is shared.
+
 ## Architecture
 
 ```
 desktop-moodbot/
-  core/              # Mood state computation
+  core/              # Mood state computation (shared across agents)
     sentiment.py     # VADER scoring + rolling window + hysteresis
     activity.py      # Tool-use classification into Big 6 states
     state.py         # 6 activities × 5 emotions matrix + variant pooling
-  watcher/           # File watcher polling agent JSONL files
-  publishers/        # Display-agnostic push interface
-    base.py          # Abstract publisher
-    sse.py           # SSE/WebSocket → dashboard widget
-    eink.py          # HTTP → M5Stack CoreInk ESP32
+  parsers/           # Agent-specific JSONL parsers
+    base.py          # Abstract parser interface
+    claude_code.py   # Claude Code JSONL parser
+    openclaw.py      # OpenClaw JSONL parser (future)
+  watcher/           # File watcher — one per agent, polls JSONL files
+  server/            # HTTP server exposing /mood/<agent> endpoints
   config/            # YAML config for agent paths, display targets
 ```
 
@@ -120,11 +132,12 @@ Start with Claude Code support only.
 
 ## Design Principles
 
-- **Display-agnostic**: Same mood state pushes to dashboard AND hardware via publisher pattern
-- **No database**: Lightweight, stateless — reads JSONL files, computes state, pushes to subscribers
-- **Plugin architecture**: New agents added by writing a parser, new displays by writing a publisher
-- **Docker-first**: `docker run desktopmoodbot/server` for one-line setup
-- **Also supports**: git clone + manual run
+- **One device per agent**: No cross-agent complexity. Each moodbot is independent.
+- **No database**: Lightweight, stateless — reads JSONL files, computes state, serves via HTTP
+- **Plugin architecture**: New agents added by writing a parser. Scoring pipeline is shared.
+- **ESP32 polls server**: Simple `GET /mood/<agent>` endpoint. No WebSocket, no push.
+- **Docker-first**: `docker run -v ~/.claude:... desktopmoodbot/server` for one-line setup
+- **Also supports**: `pip install` + `moodbot serve` CLI
 
 ## Code Style
 
