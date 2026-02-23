@@ -19,8 +19,8 @@ Our most important learning: **A single character must possess a distinct, mathe
 In our initial generation pass, we mistakenly allowed the AI to drift between different eye topologies (e.g., solid circles, hollow ovals, "pac-man" shapes, and detached pupils). 
 
 **Founder Edition eyes must adhere to the following:**
-- **Base Topology:** Choose one distinct base eye style for the character (e.g., "Solid tall oval with no pupil").
-- **State Modifications:** When emotions require eye changes (e.g., squinting, Winking, sleeping), they must be *transformations* of the base topology, not entirely new art styles. (e.g., A solid tall oval becomes a solid flat crescent when squinting, keeping the same line weight and fill).
+- **Base Topology:** The official base eye topology is **"Solid black tall ovals (like classic vintage cartoons with no pupils)"**.
+- **State Modifications:** When emotions require eye changes (e.g., squinting, winking, sleeping), they must be *transformations* of the base topology, not entirely new art styles. (e.g., A solid tall oval becomes a flattened oval when squinting).
 - **Proportions:** The distance between the eyes and their relative size to the mouth must remain anchored to prevent the character from feeling like a completely different mascot between states.
 
 ## 4. Activities via Gestures

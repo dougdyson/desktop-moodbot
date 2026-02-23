@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sprite Preview Gallery</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #f0f0f5;
+            padding: 40px;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        p {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .sprite-card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+
+        .sprite-card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* The container acting as the physical device perimeter */
+        .device-bezel {
+            width: 200px;
+            height: 200px;
+            background-color: white;
+            border-radius: 50%;
+            /* Circle hardware */
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 0 0 8px #1a1a1a;
+            /* Thick bezel simulating hardware border */
+            position: relative;
+        }
+
+        .device-bezel img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .label {
+            margin-top: 15px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #555;
+            background: #eee;
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Face Designs Inside Circular Hardware Mockup</h1>
+    <p>Displays exactly how the square sprites will map into the physical circular perimeter.</p>
+
+    <div class="gallery">
+        <!-- Thinking Neutral -->
+        <div class="sprite-card">
+            <div class="device-bezel">
+                <img src="./thinking_neutral_0_1771867959537.png" alt="thinking_neutral_0">
+            </div>
+            <div class="label">thinking_neutral_0</div>
+        </div>
+        <div class="sprite-card">
+            <div class="device-bezel">
+                <img src="./thinking_neutral_1_1771868112682.png" alt="thinking_neutral_1">
+            </div>
+            <div class="label">thinking_neutral_1</div>
+        </div>
+        <div class="sprite-card">
+            <div class="device-bezel">
+                <img src="./thinking_neutral_2_1771868339506.png" alt="thinking_neutral_2">
+            </div>
+            <div class="label">thinking_neutral_2</div>
+        </div>
+        <div class="sprite-card">
+            <div class="device-bezel">
+                <img src="./thinking_neutral_3_retry_1771868663329.png" alt="thinking_neutral_3">
+            </div>
+            <div class="label">thinking_neutral_3</div>
+        </div>
+
+        <!-- Thinking Positive -->
+        <div class="sprite-card">
+            <div class="device-bezel">
+                <img src="./thinking_positive_0_1771633094117.png" alt="thinking_positive_0">
+            </div>
+            <div class="label">thinking_positive_0</div>
+        </div>
+        <div class="sprite-card">
+            <div class="device-bezel">
+                <img src="./thinking_positive_1_1771633107184.png" alt="thinking_positive_1">
+            </div>
+            <div class="label">thinking_positive_1</div>
+        </div>
+        <div class="sprite-card">
+            <div class="device-bezel">
+                <img src="./thinking_positive_2_1771633127473.png" alt="thinking_positive_2">
+            </div>
+            <div class="label">thinking_positive_2</div>
+        </div>
+        <div class="sprite-card">
+            <div class="device-bezel">
+                <img src="./thinking_positive_3_1771633139880.png" alt="thinking_positive_3">
+            </div>
+            <div class="label">thinking_positive_3</div>
+        </div>
+
+        <!-- Conversing Neutral -->
+        <div class="sprite-card">
+            <div class="device-bezel">
+                <img src="./conversing_neutral_0_1771633161467.png" alt="conversing_neutral_0">
+            </div>
+            <div class="label">conversing_neutral_0</div>
+        </div>
+        <div class="sprite-card">
+            <div class="device-bezel">
+                <img src="./conversing_neutral_1_1771633178625.png" alt="conversing_neutral_1">
+            </div>
+            <div class="label">conversing_neutral_1</div>
+        </div>
+        <div class="sprite-card">
+            <div class="device-bezel">
+                <img src="./conversing_neutral_2_1771633194854.png" alt="conversing_neutral_2">
+            </div>
+            <div class="label">conversing_neutral_2</div>
+        </div>
+        <div class="sprite-card">
+            <div class="device-bezel">
+                <img src="./conversing_neutral_3_1771633209937.png" alt="conversing_neutral_3">
+            </div>
+            <div class="label">conversing_neutral_3</div>
+        </div>
+
+        <!-- Conversing Positive -->
+        <div class="sprite-card">
+            <div class="device-bezel">
+                <img src="./conversing_positive_0_1771633231324.png" alt="conversing_positive_0">
+            </div>
+            <div class="label">conversing_positive_0</div>
+        </div>
+    </div>
+</body>
+
+</html>
