@@ -29,14 +29,13 @@ class AgentMonitor:
         except OSError:
             return False
 
-        if str(active) == self._last_path and mtime == self._last_mtime:
-            return False
-
+        file_changed = str(active) != self._last_path or mtime != self._last_mtime
+        # Always recompute so sleep detection can trigger even when idle
         session = self.parser.parse_session(active, last_n=100)
         self._current_mood = self.engine.compute(session)
         self._last_mtime = mtime
         self._last_path = str(active)
-        return True
+        return file_changed
 
 
 class WatcherLoop:
