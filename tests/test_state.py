@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from core.sentiment import EmotionBand
-from core.state import MoodEngine, MoodState, VARIANT_COUNTS
+from core.state import MoodEngine, MoodState, VARIANT_COUNTS, EMOJI_MATRIX, SLEEPING_EMOJI
 from parsers.base import Activity, ParsedMessage, ParsedSession
 
 
@@ -45,6 +45,18 @@ class TestMoodState:
         assert d["sleeping"] is False
         assert d["bitmap"] is None
 
+    def test_to_dict_includes_emoji(self):
+        state = MoodState(
+            activity="thinking",
+            emotion="neutral",
+            variant=0,
+            timestamp="2026-02-20T14:30:00Z",
+            sleeping=False,
+            emoji="\U0001f914",
+        )
+        d = state.to_dict()
+        assert d["emoji"] == "\U0001f914"
+
     def test_to_dict_is_json_serializable(self):
         state = MoodState(
             activity="reading",
@@ -52,6 +64,7 @@ class TestMoodState:
             variant=0,
             timestamp="2026-02-20T14:30:00Z",
             sleeping=True,
+            emoji="\U0001f440",
         )
         result = json.dumps(state.to_dict())
         assert isinstance(result, str)
@@ -146,6 +159,34 @@ class TestMoodEngine:
         session = _make_session(minutes_ago=1)
         mood = engine.compute(session)
         datetime.fromisoformat(mood.timestamp)
+
+    def test_emoji_present_in_output(self):
+        engine = MoodEngine()
+        session = _make_session(minutes_ago=1)
+        mood = engine.compute(session)
+        assert mood.emoji != ""
+        assert isinstance(mood.emoji, str)
+
+    def test_emoji_matches_activity_emotion(self):
+        engine = MoodEngine()
+        session = _make_session(minutes_ago=1)
+        mood = engine.compute(session)
+        expected = EMOJI_MATRIX.get((mood.activity, mood.emotion))
+        assert mood.emoji == expected
+
+    def test_sleeping_emoji_override(self):
+        engine = MoodEngine(sleep_timeout=1)
+        session = _make_session(minutes_ago=60)
+        mood = engine.compute(session)
+        assert mood.sleeping is True
+        assert mood.emoji == SLEEPING_EMOJI
+
+    def test_emoji_covers_all_matrix_entries(self):
+        activities = ["thinking", "conversing", "reading", "executing", "editing", "system"]
+        emotions = ["negative", "uneasy", "neutral", "positive", "elated"]
+        for act in activities:
+            for emo in emotions:
+                assert (act, emo) in EMOJI_MATRIX, f"Missing emoji for ({act}, {emo})"
 
     def test_reset_between_sessions(self):
         engine = MoodEngine()
