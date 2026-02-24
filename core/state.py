@@ -62,6 +62,7 @@ class MoodState:
     sleeping: bool
     emoji: str = ""
     bitmap: Optional[str] = None
+    sentiment_score: float = 0.0
 
     def to_dict(self) -> dict:
         return {
@@ -72,6 +73,7 @@ class MoodState:
             "sleeping": self.sleeping,
             "emoji": self.emoji,
             "bitmap": self.bitmap,
+            "sentiment_score": round(self.sentiment_score, 3),
         }
 
 
@@ -117,6 +119,7 @@ class MoodEngine:
             sleeping=sleeping,
             emoji=emoji,
             bitmap=bitmap,
+            sentiment_score=self.scorer.current_score,
         )
 
     def _is_sleeping(self, session: ParsedSession) -> bool:
