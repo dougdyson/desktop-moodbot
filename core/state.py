@@ -109,13 +109,14 @@ class MoodEngine:
         else:
             emoji = EMOJI_MATRIX.get((activity.value, emotion.value), "")
 
-        now = datetime.now(timezone.utc).isoformat()
+        last_active = session.last_activity_time
+        ts = last_active.isoformat() if last_active else datetime.now(timezone.utc).isoformat()
 
         return MoodState(
             activity=activity.value,
             emotion=emotion.value,
             variant=variant,
-            timestamp=now,
+            timestamp=ts,
             sleeping=sleeping,
             emoji=emoji,
             bitmap=bitmap,
