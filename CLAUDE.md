@@ -182,6 +182,33 @@ ESP32 polls `GET /mood/<agent>` (e.g. `/mood/claude-code`). Returns:
 - **Docker-first**: `docker run -v ~/.claude:... desktopmoodbot/server` for one-line setup
 - **Also supports**: `pip install` + `moodbot serve` CLI
 
+## Development Environment
+
+**This product has its own conda environment. NEVER use kokoro-tts or any other project's environment.**
+
+```bash
+conda activate desktop-moodbot
+```
+
+If the env doesn't exist yet:
+```bash
+conda create -n desktop-moodbot python=3.10 -y
+conda activate desktop-moodbot
+pip install vaderSentiment
+```
+
+To run the server:
+```bash
+conda activate desktop-moodbot
+python __main__.py
+```
+
+## Port Assignment
+
+**Default port: 9400.** Do NOT use popular ports (8080, 3000, 5000, etc.) — this dev machine runs ~20 services and common ports are always taken. The moodbot uses **9400** to avoid collisions.
+
+The ziggy-web widget connects to `NEXT_PUBLIC_MOODBOT_URL` (default `http://localhost:9400`).
+
 ## Code Style
 
 - No comments unless explicitly requested

@@ -12,7 +12,7 @@ def main() -> None:
         description="Desktop Mood Bot — AI agent mood display server",
     )
     parser.add_argument(
-        "--port", type=int, default=8080, help="HTTP server port (default: 8080)"
+        "--port", type=int, default=9400, help="HTTP server port (default: 9400)"
     )
     parser.add_argument(
         "--host", type=str, default="0.0.0.0", help="HTTP server host (default: 0.0.0.0)"

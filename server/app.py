@@ -64,10 +64,18 @@ class MoodHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def do_OPTIONS(self) -> None:
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
+
     def _respond_error(self, code: int, message: str) -> None:
         body = json.dumps({"error": message}).encode("utf-8")
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -76,6 +84,6 @@ class MoodHandler(BaseHTTPRequestHandler):
         pass
 
 
-def run_server(host: str = "0.0.0.0", port: int = 8080) -> HTTPServer:
+def run_server(host: str = "0.0.0.0", port: int = 9400) -> HTTPServer:
     server = HTTPServer((host, port), MoodHandler)
     return server
