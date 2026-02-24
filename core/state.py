@@ -23,7 +23,7 @@ EMOJI_MATRIX: dict[tuple[str, str], str] = {
     ("thinking", "elated"): "\U0001f92f",     # 🤯
     ("conversing", "negative"): "\U0001f624", # 😤
     ("conversing", "uneasy"): "\U0001f61f",   # 😟
-    ("conversing", "neutral"): "\U0001f636",  # 😶
+    ("conversing", "neutral"): "\U0001fae4",  # 🫤
     ("conversing", "positive"): "\U0001f60a", # 😊
     ("conversing", "elated"): "\U0001f929",   # 🤩
     ("reading", "negative"): "\U0001f616",    # 😖
