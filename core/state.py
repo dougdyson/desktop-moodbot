@@ -16,36 +16,36 @@ VARIANT_COUNTS = {
 }
 
 EMOJI_MATRIX: dict[tuple[str, str], str] = {
-    ("thinking", "negative"): "\U0001f623",
-    ("thinking", "uneasy"): "\U0001f615",
-    ("thinking", "neutral"): "\U0001f914",
-    ("thinking", "positive"): "\U0001f4ad",
-    ("thinking", "elated"): "\U0001f9e0",
-    ("conversing", "negative"): "\U0001f624",
-    ("conversing", "uneasy"): "\U0001f61f",
-    ("conversing", "neutral"): "\U0001f5e3\ufe0f",
-    ("conversing", "positive"): "\U0001f60a",
-    ("conversing", "elated"): "\U0001f929",
-    ("reading", "negative"): "\U0001f616",
-    ("reading", "uneasy"): "\U0001f9d0",
-    ("reading", "neutral"): "\U0001f440",
-    ("reading", "positive"): "\U0001f4d6",
-    ("reading", "elated"): "\U0001f50e",
-    ("executing", "negative"): "\U0001f4a5",
-    ("executing", "uneasy"): "\u26a0\ufe0f",
-    ("executing", "neutral"): "\u2699\ufe0f",
-    ("executing", "positive"): "\u26a1",
-    ("executing", "elated"): "\U0001f680",
-    ("editing", "negative"): "\U0001f629",
-    ("editing", "uneasy"): "\U0001f62c",
-    ("editing", "neutral"): "\u270f\ufe0f",
-    ("editing", "positive"): "\u270d\ufe0f",
-    ("editing", "elated"): "\U0001f4dd",
-    ("system", "negative"): "\U0001f534",
-    ("system", "uneasy"): "\U0001f7e1",
-    ("system", "neutral"): "\U0001f527",
-    ("system", "positive"): "\U0001f504",
-    ("system", "elated"): "\u2705",
+    ("thinking", "negative"): "\U0001f623",   # 😣
+    ("thinking", "uneasy"): "\U0001f615",     # 😕
+    ("thinking", "neutral"): "\U0001f914",    # 🤔
+    ("thinking", "positive"): "\U0001f60c",   # 😌
+    ("thinking", "elated"): "\U0001f92f",     # 🤯
+    ("conversing", "negative"): "\U0001f624", # 😤
+    ("conversing", "uneasy"): "\U0001f61f",   # 😟
+    ("conversing", "neutral"): "\U0001f636",  # 😶
+    ("conversing", "positive"): "\U0001f60a", # 😊
+    ("conversing", "elated"): "\U0001f929",   # 🤩
+    ("reading", "negative"): "\U0001f616",    # 😖
+    ("reading", "uneasy"): "\U0001f9d0",     # 🧐
+    ("reading", "neutral"): "\U0001fae3",     # 🫣
+    ("reading", "positive"): "\U0001f60f",    # 😏
+    ("reading", "elated"): "\U0001f913",      # 🤓
+    ("executing", "negative"): "\U0001f635",  # 😵
+    ("executing", "uneasy"): "\U0001f62c",    # 😬
+    ("executing", "neutral"): "\U0001f610",   # 😐
+    ("executing", "positive"): "\U0001f60e",  # 😎
+    ("executing", "elated"): "\U0001f973",    # 🥳
+    ("editing", "negative"): "\U0001f629",    # 😩
+    ("editing", "uneasy"): "\U0001f62c",      # 😬
+    ("editing", "neutral"): "\U0001f928",     # 🤨
+    ("editing", "positive"): "\U0001f642",    # 🙂
+    ("editing", "elated"): "\U0001f601",      # 😁
+    ("system", "negative"): "\U0001f630",     # 😰
+    ("system", "uneasy"): "\U0001f627",       # 😧
+    ("system", "neutral"): "\U0001f611",      # 😑
+    ("system", "positive"): "\U0001f604",     # 😄
+    ("system", "elated"): "\U0001f607",       # 😇
 }
 
 SLEEPING_EMOJI = "\U0001f634"
