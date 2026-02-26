@@ -1,4 +1,5 @@
 import random
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Optional
@@ -126,6 +127,10 @@ class MoodEngine:
     def _is_sleeping(self, session: ParsedSession) -> bool:
         last_time = session.last_activity_time
         if not last_time:
+            # No parsed messages yet — fall back to file modification time
+            if session.last_modified:
+                elapsed = time.time() - session.last_modified
+                return elapsed > self.sleep_timeout
             return True
         now = datetime.now(timezone.utc)
         if last_time.tzinfo is None:
