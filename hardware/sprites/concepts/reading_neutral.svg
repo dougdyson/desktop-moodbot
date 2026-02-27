@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" fill="white"/>
+  <!-- Eyes - half-lidded, focused, scanning left to right -->
+  <ellipse cx="72" cy="82" rx="9" ry="6" fill="black"/>
+  <ellipse cx="128" cy="82" rx="9" ry="6" fill="black"/>
+  <!-- Eyelids (top) - focused/reading look -->
+  <path d="M 58 78 Q 72 72 86 78" stroke="black" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M 114 78 Q 128 72 142 78" stroke="black" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Neutral mouth - slight line -->
+  <path d="M 80 128 L 120 128" stroke="black" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <!-- Book prop (bottom right) -->
+  <g transform="translate(148, 148) rotate(-15)">
+    <rect x="-16" y="-12" width="32" height="24" fill="none" stroke="black" stroke-width="2.5" rx="1"/>
+    <line x1="0" y1="-12" x2="0" y2="12" stroke="black" stroke-width="2"/>
+    <!-- Page lines -->
+    <line x1="-12" y1="-6" x2="-3" y2="-6" stroke="black" stroke-width="1.5" opacity="0.5"/>
+    <line x1="-12" y1="-1" x2="-3" y2="-1" stroke="black" stroke-width="1.5" opacity="0.5"/>
+    <line x1="-12" y1="4" x2="-3" y2="4" stroke="black" stroke-width="1.5" opacity="0.5"/>
+    <line x1="3" y1="-6" x2="12" y2="-6" stroke="black" stroke-width="1.5" opacity="0.5"/>
+    <line x1="3" y1="-1" x2="12" y2="-1" stroke="black" stroke-width="1.5" opacity="0.5"/>
+    <line x1="3" y1="4" x2="12" y2="4" stroke="black" stroke-width="1.5" opacity="0.5"/>
+  </g>
+</svg>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" fill="white"/>
+  <!-- Eyes - worried, looking to the side -->
+  <circle cx="75" cy="80" r="8" fill="black"/>
+  <circle cx="131" cy="80" r="8" fill="black"/>
+  <!-- Worry brows - angled up in middle -->
+  <path d="M 56 66 Q 72 60 88 68" stroke="black" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M 144 66 Q 128 60 112 68" stroke="black" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- Wavy/uncertain mouth -->
+  <path d="M 72 130 Q 82 125 92 130 Q 102 135 112 130 Q 122 125 132 130" stroke="black" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <!-- Sweat drop -->
+  <path d="M 152 65 Q 155 55 158 65 Q 155 72 152 65" fill="black" opacity="0.7"/>
+  <!-- Small thought bubble -->
+  <circle cx="42" cy="52" r="8" fill="none" stroke="black" stroke-width="2"/>
+  <text x="38" y="56" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="black">?</text>
+</svg>

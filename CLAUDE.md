@@ -130,6 +130,28 @@ Start with Claude Code support only.
 - Activity shown through expression (eyes scanning = reading, mouth open = talking)
 - Emotion shown through valence (smile vs frown, relaxed vs tense)
 
+### CoreInk Physical Specs (CRITICAL — enclosure must match these exactly)
+
+The enclosure wraps the CoreInk hardware. All enclosure dimensions MUST derive from these specs. The reference model lives at `hardware/reference/coreink_reference.scad` — always use it as the source of truth.
+
+**Portrait orientation** (how the device stands on a desk):
+- **Width (X)**: 40mm
+- **Height (Z)**: 56mm (tall axis)
+- **Depth (Y)**: 16mm (thickness)
+
+**Display**: 27.6 × 27.6mm active area, centered horizontally, in the **upper portion** of the front face (center ~36mm from bottom)
+
+**Ports and buttons**:
+- USB-C: bottom edge, center
+- Dial/button: top edge
+- Side button: right side (when facing screen), ~28mm from bottom
+
+**Enclosure design rules**:
+- All cutout positions derive from the reference model, not freehand
+- Enclosure = shell around hardware + tolerance (0.3mm typical)
+- Wall thickness: 2mm (suitable for Creality Ender 3)
+- The reference model should be visible as a ghost overlay during design
+
 ## ESP32 Communication Protocol
 
 ### Endpoint
