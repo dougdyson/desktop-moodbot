@@ -18,7 +18,7 @@ hw_d = 16;
 // --- Display (front face, upper portion) ---
 hw_disp_w = 27.6;
 hw_disp_h = 27.6;
-hw_disp_z = 38;     // center from bottom of CoreInk
+hw_disp_z = 34;     // center from bottom of CoreInk
 
 // --- Button G5 (front face, below display) ---
 hw_g5_w = 6;
@@ -38,12 +38,12 @@ hw_grove_x = 8;
 // --- 3-Dir Switch (right side, upper) ---
 hw_sw_h = 8;
 hw_sw_d = 4;
-hw_sw_z = 40;
+hw_sw_z = 28;
 
-// --- Power button (right side, lower) ---
+// --- Power button (right side, just below switch) ---
 hw_pwr_h = 5;
 hw_pwr_d = 3;
-hw_pwr_z = 25;
+hw_pwr_z = 23;
 
 // --- Shell parameters ---
 wall = 2.0;
@@ -169,9 +169,14 @@ module foot() {
 // ASSEMBLY
 // =====================
 
+// --- Tilt angle (lean back so it looks up at you) ---
+tilt = -12;  // degrees (negative = lean back, face looks up)
+
 color("WhiteSmoke") {
+    // Everything tilts around the base
     translate([0, 0, foot_h])
-        shell();
+        rotate([tilt, 0, 0])
+            shell();
 
     // Two feet
     for (sign = [-1, 1])
@@ -184,9 +189,11 @@ color("GhostWhite")
     translate([enc_w + 15, 0, 0])
         back_plate();
 
-// Ghost CoreInk
-%translate([0, 0, foot_h + ci_z0 + hw_h/2])
-    cube([hw_w, hw_d, hw_h], center=true);
+// Ghost CoreInk (tilted with body)
+%translate([0, 0, foot_h])
+    rotate([tilt, 0, 0])
+        translate([0, 0, ci_z0 + hw_h/2])
+            cube([hw_w, hw_d, hw_h], center=true);
 
 // =====================
 // MOOD FACE on display
@@ -195,8 +202,8 @@ color("GhostWhite")
 // Scale: display is 27.6mm, face lives within that
 
 module mood_face() {
-    screen_z = foot_h + disp_cut_z;
-    screen_y = -enc_d/2 + 0.5;
+    screen_z = disp_cut_z;
+    screen_y = -enc_d/2 + 1.5;
 
     translate([0, screen_y, screen_z])
     rotate([90, 0, 0]) {
@@ -228,4 +235,6 @@ module mood_face() {
     }
 }
 
-// mood_face();  // uncomment to show face on display
+translate([0, 0, foot_h])
+    rotate([tilt, 0, 0])
+        mood_face();
