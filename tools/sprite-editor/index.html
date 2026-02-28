@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoreInk Sprite Editor — Desktop Mood Bot</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+<script src="sprites-data.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  font-size: 13px;
+}
+
+/* Toolbar */
+#toolbar {
+  width: 52px;
+  background: #16213e;
+  border-right: 1px solid #0f3460;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 4px;
+  gap: 4px;
+}
+
+.tool-btn {
+  width: 44px;
+  height: 40px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #a0a0c0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  gap: 2px;
+  transition: all 0.15s;
+}
+
+.tool-btn:hover { background: #1a3a5c; color: #fff; }
+.tool-btn.active { background: #0f3460; border-color: #4a9eff; color: #4a9eff; }
+.tool-btn svg { width: 18px; height: 18px; }
+.tool-btn .shortcut { font-size: 8px; opacity: 0.5; }
+
+.tool-sep {
+  height: 1px;
+  background: #0f3460;
+  margin: 4px 2px;
+}
+
+/* Canvas area */
+#canvas-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #1a1a2e;
+  position: relative;
+  min-width: 0;
+  overflow-y: auto;
+  padding-top: 30px;
+}
+
+#canvas-wrapper {
+  position: relative;
+  border: 2px solid #0f3460;
+  border-radius: 4px;
+  background: #fff;
+}
+
+#bezel-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200px;
+  height: 200px;
+  pointer-events: none;
+  z-index: 10;
+  display: none;
+}
+
+#canvas-info {
+  margin-top: 10px;
+  font-size: 11px;
+  color: #666;
+  text-align: center;
+}
+
+/* Right panel */
+#right-panel {
+  width: 280px;
+  background: #16213e;
+  border-left: 1px solid #0f3460;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.panel-section {
+  padding: 12px;
+  border-bottom: 1px solid #0f3460;
+}
+
+.panel-section h3 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #4a9eff;
+  margin-bottom: 8px;
+}
+
+/* Naming controls */
+.naming-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.naming-row select, .naming-row input {
+  flex: 1;
+  background: #1a1a2e;
+  border: 1px solid #0f3460;
+  color: #e0e0e0;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.naming-row input[type="number"] { width: 50px; flex: 0 0 50px; }
+
+#filename-preview {
+  font-family: monospace;
+  font-size: 11px;
+  color: #4a9eff;
+  padding: 4px;
+  background: #1a1a2e;
+  border-radius: 3px;
+  text-align: center;
+}
+
+/* Properties */
+.prop-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+  gap: 8px;
+}
+
+.prop-row label {
+  width: 70px;
+  font-size: 11px;
+  color: #a0a0c0;
+}
+
+.prop-row input[type="range"] { flex: 1; }
+.prop-row .val { width: 24px; text-align: right; font-size: 11px; }
+
+.fill-btns, .stroke-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.fill-btn, .stroke-btn {
+  width: 28px;
+  height: 28px;
+  border: 2px solid #0f3460;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+}
+
+.fill-btn.active, .stroke-btn.active { border-color: #4a9eff; }
+.fill-btn.black, .stroke-btn.black { background: #000; }
+.fill-btn.white, .stroke-btn.white { background: #fff; }
+
+.fill-btn.none {
+  background: #fff;
+  position: relative;
+}
+
+.fill-btn.none::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  background: linear-gradient(to top right, transparent calc(50% - 1px), #f00, transparent calc(50% + 1px));
+}
+
+.layer-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.layer-btn, .action-btn {
+  padding: 4px 8px;
+  background: #1a1a2e;
+  border: 1px solid #0f3460;
+  color: #a0a0c0;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.layer-btn:hover, .action-btn:hover { background: #0f3460; color: #fff; }
+
+/* File operations */
+.file-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.file-btn {
+  padding: 6px 10px;
+  background: #1a1a2e;
+  border: 1px solid #0f3460;
+  color: #e0e0e0;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  flex: 1;
+  text-align: center;
+  min-width: 80px;
+}
+
+.file-btn:hover { background: #0f3460; }
+.file-btn.primary { background: #0f3460; border-color: #4a9eff; }
+.file-btn.primary:hover { background: #1a4a7e; }
+
+/* State matrix */
+#matrix-panel {
+  padding: 12px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+#matrix-panel h3 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #4a9eff;
+  margin-bottom: 8px;
+}
+
+.matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+
+.matrix-table th {
+  padding: 3px 2px;
+  color: #a0a0c0;
+  font-weight: normal;
+  text-align: center;
+}
+
+.matrix-table th:first-child { text-align: left; }
+
+.matrix-cell {
+  width: 36px;
+  height: 28px;
+  border: 1px solid #0f3460;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  color: #666;
+  font-size: 9px;
+  transition: background 0.15s;
+}
+
+.matrix-cell:hover { background: #1a3a5c; }
+.matrix-cell.current { border-color: #4a9eff; background: #0f3460; color: #4a9eff; }
+.matrix-cell .variant-dots { display: flex; gap: 2px; justify-content: center; }
+.matrix-cell .dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #333;
+}
+
+.matrix-cell .dot.needed { background: #555; }
+
+/* Toggle */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.toggle {
+  width: 36px;
+  height: 20px;
+  background: #333;
+  border-radius: 10px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+}
+
+.toggle.on { background: #4a9eff; }
+
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.toggle.on::after { transform: translateX(16px); }
+
+/* Gallery */
+#gallery {
+  width: 100%;
+  max-width: 680px;
+  margin-top: 20px;
+  padding: 0 16px 16px;
+}
+
+#gallery h3 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #4a9eff;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gallery-activity {
+  margin-bottom: 12px;
+}
+
+.gallery-activity-label {
+  font-size: 10px;
+  color: #a0a0c0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.gallery-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.gallery-thumb {
+  width: 64px;
+  height: 64px;
+  border: 2px solid #0f3460;
+  border-radius: 4px;
+  cursor: pointer;
+  background: #fff;
+  position: relative;
+  transition: all 0.15s;
+}
+
+.gallery-thumb:hover {
+  border-color: #4a9eff;
+  transform: scale(1.08);
+  z-index: 1;
+}
+
+.gallery-thumb.active {
+  border-color: #4a9eff;
+  box-shadow: 0 0 8px rgba(74, 158, 255, 0.4);
+}
+
+.gallery-thumb canvas {
+  width: 60px;
+  height: 60px;
+}
+
+.gallery-thumb .thumb-label {
+  position: absolute;
+  bottom: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 8px;
+  color: #666;
+  white-space: nowrap;
+}
+
+.gallery-emotion-header {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.gallery-emotion-tag {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: #0f3460;
+  color: #a0a0c0;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #16213e; }
+::-webkit-scrollbar-thumb { background: #0f3460; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- Toolbar -->
+<div id="toolbar">
+  <button class="tool-btn active" data-tool="select" title="Select (V)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 14-5 0-3 5-2-7-7-2 5-3z"/></svg>
+    <span class="shortcut">V</span>
+  </button>
+  <button class="tool-btn" data-tool="circle" title="Circle (C)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+    <span class="shortcut">C</span>
+  </button>
+  <button class="tool-btn" data-tool="ellipse" title="Ellipse (E)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="12" rx="10" ry="6"/></svg>
+    <span class="shortcut">E</span>
+  </button>
+  <button class="tool-btn" data-tool="line" title="Line (L)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="20" x2="20" y2="4"/></svg>
+    <span class="shortcut">L</span>
+  </button>
+  <button class="tool-btn" data-tool="path" title="Bezier Path (P)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20 Q12 4 20 20"/><circle cx="4" cy="20" r="2" fill="currentColor"/><circle cx="20" cy="20" r="2" fill="currentColor"/><circle cx="12" cy="4" r="2"/></svg>
+    <span class="shortcut">P</span>
+  </button>
+  <button class="tool-btn" data-tool="rect" title="Rectangle (R)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="12" rx="1"/></svg>
+    <span class="shortcut">R</span>
+  </button>
+  <button class="tool-btn" data-tool="draw" title="Freehand (D)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 18 Q8 8 12 14 Q16 20 20 6"/></svg>
+    <span class="shortcut">D</span>
+  </button>
+  <div class="tool-sep"></div>
+  <button class="tool-btn" id="undo-btn" title="Undo (Ctrl+Z)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h10a5 5 0 0 1 0 10H12"/><polyline points="7 6 3 10 7 14"/></svg>
+  </button>
+  <button class="tool-btn" id="redo-btn" title="Redo (Ctrl+Y)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10H11a5 5 0 0 0 0 10h1"/><polyline points="17 6 21 10 17 14"/></svg>
+  </button>
+</div>
+
+<!-- Canvas Area -->
+<div id="canvas-area">
+  <div id="canvas-wrapper">
+    <canvas id="sprite-canvas" width="200" height="200"></canvas>
+    <svg id="bezel-overlay" viewBox="0 0 200 200">
+      <defs>
+        <mask id="bezel-mask">
+          <rect width="200" height="200" fill="white"/>
+          <circle cx="100" cy="100" r="90" fill="black"/>
+        </mask>
+      </defs>
+      <rect width="200" height="200" fill="rgba(0,0,0,0.6)" mask="url(#bezel-mask)"/>
+      <circle cx="100" cy="100" r="90" fill="none" stroke="#333" stroke-width="1" stroke-dasharray="4 2"/>
+    </svg>
+  </div>
+  <div id="canvas-info">200 × 200px — 1-bit black/white — CoreInk display</div>
+  <div id="gallery">
+    <h3>Sprite Gallery <span style="font-weight:normal;color:#666;font-size:10px;">(click to load into editor)</span></h3>
+    <div id="gallery-grid"></div>
+  </div>
+</div>
+
+<!-- Right Panel -->
+<div id="right-panel">
+  <!-- Naming -->
+  <div class="panel-section">
+    <h3>Sprite Name</h3>
+    <div class="naming-row">
+      <select id="activity-select">
+        <option value="thinking">thinking</option>
+        <option value="conversing">conversing</option>
+        <option value="reading">reading</option>
+        <option value="executing">executing</option>
+        <option value="editing">editing</option>
+        <option value="system">system</option>
+        <option value="sleeping">sleeping</option>
+      </select>
+      <select id="emotion-select">
+        <option value="negative">negative</option>
+        <option value="uneasy">uneasy</option>
+        <option value="neutral">neutral</option>
+        <option value="positive">positive</option>
+        <option value="elated">elated</option>
+      </select>
+      <input type="number" id="variant-input" min="0" max="3" value="0">
+    </div>
+    <div id="filename-preview">thinking_negative_0</div>
+  </div>
+
+  <!-- Object Properties -->
+  <div class="panel-section" id="properties-panel">
+    <h3>Properties</h3>
+    <div id="no-selection" style="color:#666;font-size:11px;">No object selected</div>
+    <div id="obj-props" style="display:none;">
+      <div class="prop-row">
+        <label>Stroke W</label>
+        <input type="range" id="stroke-width" min="1" max="8" value="3">
+        <span class="val" id="stroke-width-val">3</span>
+      </div>
+      <div class="prop-row">
+        <label>Fill</label>
+        <div class="fill-btns">
+          <div class="fill-btn black active" data-fill="black" title="Black"></div>
+          <div class="fill-btn white" data-fill="white" title="White"></div>
+          <div class="fill-btn none" data-fill="none" title="None"></div>
+        </div>
+      </div>
+      <div class="prop-row">
+        <label>Stroke</label>
+        <div class="stroke-btns">
+          <div class="stroke-btn black active" data-stroke="black" title="Black"></div>
+          <div class="stroke-btn white" data-stroke="white" title="White"></div>
+        </div>
+      </div>
+      <div class="prop-row">
+        <label>Layer</label>
+        <div class="layer-btns">
+          <button class="layer-btn" id="bring-front" title="Bring to front">Front</button>
+          <button class="layer-btn" id="send-back" title="Send to back">Back</button>
+          <button class="layer-btn" id="duplicate-btn" title="Duplicate (Ctrl+D)">Dup</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Options -->
+  <div class="panel-section">
+    <h3>View</h3>
+    <div class="toggle-row">
+      <div class="toggle" id="margin-toggle" title="10px margin guide"></div>
+      <label>Margin guide (10px)</label>
+    </div>
+    <div class="toggle-row">
+      <div class="toggle" id="bezel-toggle" title="Circular bezel preview"></div>
+      <label>Bezel preview</label>
+    </div>
+  </div>
+
+  <!-- File Operations -->
+  <div class="panel-section">
+    <h3>File</h3>
+    <div class="file-btns">
+      <button class="file-btn primary" id="save-json">Save JSON</button>
+      <button class="file-btn" id="load-json">Load JSON</button>
+      <button class="file-btn" id="export-png">Export PNG</button>
+      <button class="file-btn" id="clear-canvas">Clear</button>
+    </div>
+    <input type="file" id="json-file-input" accept=".json" style="display:none;">
+  </div>
+
+  <!-- State Matrix -->
+  <div id="matrix-panel">
+    <h3>State Matrix (73 sprites)</h3>
+    <table class="matrix-table" id="state-matrix"></table>
+  </div>
+</div>
+
+<script>
+const ACTIVITIES = ['thinking', 'conversing', 'reading', 'executing', 'editing', 'system'];
+const EMOTIONS = ['negative', 'uneasy', 'neutral', 'positive', 'elated'];
+const VARIANT_COUNTS = {
+  negative: 1,
+  uneasy: 2,
+  neutral: 4,
+  positive: 4,
+  elated: 1
+};
+
+const canvas = new fabric.Canvas('sprite-canvas', {
+  backgroundColor: '#ffffff',
+  selection: true,
+  width: 200,
+  height: 200,
+  preserveObjectStacking: true
+});
+
+let currentTool = 'select';
+let isDrawing = false;
+let drawStart = null;
+let tempShape = null;
+let pathPoints = [];
+let marginGuide = null;
+let showMargin = false;
+let showBezel = false;
+
+// Undo/redo
+let undoStack = [];
+let redoStack = [];
+let ignoreChanges = false;
+
+function saveState() {
+  if (ignoreChanges) return;
+  const json = canvas.toJSON();
+  undoStack.push(JSON.stringify(json));
+  if (undoStack.length > 50) undoStack.shift();
+  redoStack = [];
+}
+
+function undo() {
+  if (undoStack.length < 2) return;
+  redoStack.push(undoStack.pop());
+  const state = undoStack[undoStack.length - 1];
+  ignoreChanges = true;
+  canvas.loadFromJSON(state, () => {
+    canvas.renderAll();
+    ignoreChanges = false;
+    updateMarginGuide();
+  });
+}
+
+function redo() {
+  if (redoStack.length === 0) return;
+  const state = redoStack.pop();
+  undoStack.push(state);
+  ignoreChanges = true;
+  canvas.loadFromJSON(state, () => {
+    canvas.renderAll();
+    ignoreChanges = false;
+    updateMarginGuide();
+  });
+}
+
+saveState();
+
+canvas.on('object:added', saveState);
+canvas.on('object:modified', saveState);
+canvas.on('object:removed', saveState);
+
+// Tool selection
+function selectTool(tool) {
+  currentTool = tool;
+  document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.toggle('active', b.dataset.tool === tool));
+  canvas.isDrawingMode = (tool === 'draw');
+  canvas.selection = (tool === 'select');
+
+  if (tool === 'draw') {
+    canvas.freeDrawingBrush.color = 'black';
+    canvas.freeDrawingBrush.width = parseInt(document.getElementById('stroke-width').value);
+  }
+
+  if (tool !== 'path') {
+    finishPath();
+  }
+
+  if (tool !== 'select') {
+    canvas.discardActiveObject();
+    canvas.renderAll();
+  }
+
+  canvas.defaultCursor = (tool === 'select') ? 'default' : 'crosshair';
+}
+
+document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+  btn.addEventListener('click', () => selectTool(btn.dataset.tool));
+});
+
+// Drawing shapes
+canvas.on('mouse:down', function(opt) {
+  if (currentTool === 'select' || currentTool === 'draw') return;
+
+  const pointer = canvas.getPointer(opt.e);
+
+  if (currentTool === 'path') {
+    handlePathClick(pointer);
+    return;
+  }
+
+  isDrawing = true;
+  drawStart = { x: pointer.x, y: pointer.y };
+
+  const common = {
+    left: pointer.x,
+    top: pointer.y,
+    fill: 'none',
+    stroke: 'black',
+    strokeWidth: 3,
+    strokeLineCap: 'round',
+    originX: 'center',
+    originY: 'center',
+    selectable: false,
+    evented: false
+  };
+
+  switch (currentTool) {
+    case 'circle':
+      tempShape = new fabric.Circle({ ...common, radius: 0 });
+      break;
+    case 'ellipse':
+      tempShape = new fabric.Ellipse({ ...common, rx: 0, ry: 0 });
+      break;
+    case 'rect':
+      tempShape = new fabric.Rect({ ...common, width: 0, height: 0, originX: 'left', originY: 'top' });
+      break;
+    case 'line':
+      tempShape = new fabric.Line([pointer.x, pointer.y, pointer.x, pointer.y], {
+        stroke: 'black',
+        strokeWidth: 3,
+        strokeLineCap: 'round',
+        selectable: false,
+        evented: false
+      });
+      break;
+  }
+
+  if (tempShape) {
+    canvas.add(tempShape);
+  }
+});
+
+canvas.on('mouse:move', function(opt) {
+  if (!isDrawing || !tempShape) return;
+
+  const pointer = canvas.getPointer(opt.e);
+  const dx = pointer.x - drawStart.x;
+  const dy = pointer.y - drawStart.y;
+
+  switch (currentTool) {
+    case 'circle': {
+      const r = Math.sqrt(dx * dx + dy * dy);
+      tempShape.set({ radius: r });
+      break;
+    }
+    case 'ellipse':
+      tempShape.set({ rx: Math.abs(dx), ry: Math.abs(dy) });
+      break;
+    case 'rect':
+      tempShape.set({
+        left: dx >= 0 ? drawStart.x : pointer.x,
+        top: dy >= 0 ? drawStart.y : pointer.y,
+        width: Math.abs(dx),
+        height: Math.abs(dy)
+      });
+      break;
+    case 'line':
+      tempShape.set({ x2: pointer.x, y2: pointer.y });
+      break;
+  }
+
+  canvas.renderAll();
+});
+
+canvas.on('mouse:up', function() {
+  if (!isDrawing || !tempShape) return;
+  isDrawing = false;
+
+  let tooSmall = false;
+  switch (currentTool) {
+    case 'circle':
+      tooSmall = tempShape.radius < 2;
+      break;
+    case 'ellipse':
+      tooSmall = tempShape.rx < 2 && tempShape.ry < 2;
+      break;
+    case 'rect':
+      tooSmall = tempShape.width < 2 && tempShape.height < 2;
+      break;
+    case 'line': {
+      const dx = tempShape.x2 - tempShape.x1;
+      const dy = tempShape.y2 - tempShape.y1;
+      tooSmall = Math.sqrt(dx * dx + dy * dy) < 2;
+      break;
+    }
+  }
+
+  if (tooSmall) {
+    canvas.remove(tempShape);
+  } else {
+    tempShape.set({ selectable: true, evented: true });
+    canvas.setActiveObject(tempShape);
+  }
+
+  tempShape = null;
+  canvas.renderAll();
+});
+
+// Bezier path tool
+let pathPreviewLine = null;
+let pathDots = [];
+
+function handlePathClick(pointer) {
+  pathPoints.push({ x: pointer.x, y: pointer.y });
+
+  const dot = new fabric.Circle({
+    left: pointer.x,
+    top: pointer.y,
+    radius: 3,
+    fill: '#4a9eff',
+    stroke: '#fff',
+    strokeWidth: 1,
+    originX: 'center',
+    originY: 'center',
+    selectable: false,
+    evented: false,
+    _isPathDot: true
+  });
+  canvas.add(dot);
+  pathDots.push(dot);
+
+  if (pathPoints.length >= 2 && pathPreviewLine) {
+    canvas.remove(pathPreviewLine);
+    pathPreviewLine = null;
+  }
+
+  if (pathPoints.length >= 2) {
+    if (pathPreviewLine) canvas.remove(pathPreviewLine);
+    const pts = pathPoints;
+    const last2 = pts.slice(-2);
+    pathPreviewLine = new fabric.Line(
+      [last2[0].x, last2[0].y, last2[1].x, last2[1].y],
+      { stroke: '#4a9eff', strokeWidth: 1, strokeDashArray: [4, 4], selectable: false, evented: false, _isPathDot: true }
+    );
+    canvas.add(pathPreviewLine);
+  }
+
+  canvas.renderAll();
+}
+
+function finishPath() {
+  pathDots.forEach(d => canvas.remove(d));
+  if (pathPreviewLine) canvas.remove(pathPreviewLine);
+  pathDots = [];
+  pathPreviewLine = null;
+
+  if (pathPoints.length < 2) {
+    pathPoints = [];
+    canvas.renderAll();
+    return;
+  }
+
+  let pathStr = `M ${pathPoints[0].x} ${pathPoints[0].y}`;
+
+  if (pathPoints.length === 2) {
+    pathStr += ` L ${pathPoints[1].x} ${pathPoints[1].y}`;
+  } else if (pathPoints.length === 3) {
+    pathStr += ` Q ${pathPoints[1].x} ${pathPoints[1].y} ${pathPoints[2].x} ${pathPoints[2].y}`;
+  } else {
+    for (let i = 1; i < pathPoints.length - 1; i += 2) {
+      if (i + 1 < pathPoints.length) {
+        pathStr += ` Q ${pathPoints[i].x} ${pathPoints[i].y} ${pathPoints[i + 1].x} ${pathPoints[i + 1].y}`;
+      } else {
+        pathStr += ` L ${pathPoints[i].x} ${pathPoints[i].y}`;
+      }
+    }
+    if (pathPoints.length % 2 === 0) {
+      const last = pathPoints[pathPoints.length - 1];
+      pathStr += ` L ${last.x} ${last.y}`;
+    }
+  }
+
+  const path = new fabric.Path(pathStr, {
+    fill: 'none',
+    stroke: 'black',
+    strokeWidth: parseInt(document.getElementById('stroke-width').value),
+    strokeLineCap: 'round',
+    selectable: true,
+    evented: true
+  });
+
+  canvas.add(path);
+  canvas.setActiveObject(path);
+  pathPoints = [];
+  canvas.renderAll();
+}
+
+canvas.on('mouse:dblclick', function() {
+  if (currentTool === 'path' && pathPoints.length >= 2) {
+    finishPath();
+  }
+});
+
+// Object selection and properties
+canvas.on('selection:created', updateProperties);
+canvas.on('selection:updated', updateProperties);
+canvas.on('selection:cleared', () => {
+  document.getElementById('no-selection').style.display = '';
+  document.getElementById('obj-props').style.display = 'none';
+});
+
+function updateProperties() {
+  const obj = canvas.getActiveObject();
+  if (!obj) return;
+
+  document.getElementById('no-selection').style.display = 'none';
+  document.getElementById('obj-props').style.display = '';
+
+  const sw = obj.strokeWidth || 3;
+  document.getElementById('stroke-width').value = sw;
+  document.getElementById('stroke-width-val').textContent = sw;
+
+  document.querySelectorAll('.fill-btn').forEach(b => {
+    let fillVal = obj.fill || 'none';
+    if (!fillVal || fillVal === '') fillVal = 'none';
+    b.classList.toggle('active', b.dataset.fill === fillVal);
+  });
+
+  document.querySelectorAll('.stroke-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.stroke === (obj.stroke || 'black'));
+  });
+}
+
+document.getElementById('stroke-width').addEventListener('input', function() {
+  const val = parseInt(this.value);
+  document.getElementById('stroke-width-val').textContent = val;
+  const obj = canvas.getActiveObject();
+  if (obj) {
+    obj.set('strokeWidth', val);
+    canvas.renderAll();
+  }
+  if (canvas.isDrawingMode) {
+    canvas.freeDrawingBrush.width = val;
+  }
+});
+
+document.querySelectorAll('.fill-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const obj = canvas.getActiveObject();
+    if (!obj) return;
+    const val = this.dataset.fill === 'none' ? '' : this.dataset.fill;
+    obj.set('fill', val || null);
+    document.querySelectorAll('.fill-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    canvas.renderAll();
+  });
+});
+
+document.querySelectorAll('.stroke-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const obj = canvas.getActiveObject();
+    if (!obj) return;
+    obj.set('stroke', this.dataset.stroke);
+    document.querySelectorAll('.stroke-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    canvas.renderAll();
+  });
+});
+
+document.getElementById('bring-front').addEventListener('click', () => {
+  const obj = canvas.getActiveObject();
+  if (obj) { canvas.bringToFront(obj); canvas.renderAll(); }
+});
+
+document.getElementById('send-back').addEventListener('click', () => {
+  const obj = canvas.getActiveObject();
+  if (obj) { canvas.sendToBack(obj); updateMarginGuide(); canvas.renderAll(); }
+});
+
+document.getElementById('duplicate-btn').addEventListener('click', duplicateSelected);
+
+function duplicateSelected() {
+  const obj = canvas.getActiveObject();
+  if (!obj) return;
+  obj.clone(function(cloned) {
+    cloned.set({ left: cloned.left + 10, top: cloned.top + 10 });
+    canvas.add(cloned);
+    canvas.setActiveObject(cloned);
+    canvas.renderAll();
+  });
+}
+
+// Filename
+function updateFilename() {
+  const a = document.getElementById('activity-select').value;
+  const e = document.getElementById('emotion-select').value;
+  const v = document.getElementById('variant-input').value;
+  const name = a === 'sleeping' ? `sleeping_${v}` : `${a}_${e}_${v}`;
+  document.getElementById('filename-preview').textContent = name;
+  updateMatrixHighlight();
+  return name;
+}
+
+document.getElementById('activity-select').addEventListener('change', updateFilename);
+document.getElementById('emotion-select').addEventListener('change', updateFilename);
+document.getElementById('variant-input').addEventListener('change', updateFilename);
+
+// Margin guide
+function updateMarginGuide() {
+  if (marginGuide) {
+    canvas.remove(marginGuide);
+    marginGuide = null;
+  }
+
+  if (showMargin) {
+    marginGuide = new fabric.Rect({
+      left: 10,
+      top: 10,
+      width: 180,
+      height: 180,
+      fill: 'transparent',
+      stroke: '#ccc',
+      strokeWidth: 0.5,
+      strokeDashArray: [4, 3],
+      selectable: false,
+      evented: false,
+      _isGuide: true
+    });
+    canvas.add(marginGuide);
+    canvas.sendToBack(marginGuide);
+  }
+  canvas.renderAll();
+}
+
+document.getElementById('margin-toggle').addEventListener('click', function() {
+  showMargin = !showMargin;
+  this.classList.toggle('on', showMargin);
+  updateMarginGuide();
+});
+
+document.getElementById('bezel-toggle').addEventListener('click', function() {
+  showBezel = !showBezel;
+  this.classList.toggle('on', showBezel);
+  document.getElementById('bezel-overlay').style.display = showBezel ? 'block' : 'none';
+});
+
+// File operations
+function getCanvasData() {
+  const objs = canvas.getObjects().filter(o => !o._isGuide && !o._isPathDot);
+  const tempRemoved = [];
+  canvas.getObjects().forEach(o => {
+    if (o._isGuide || o._isPathDot) {
+      tempRemoved.push(o);
+    }
+  });
+  tempRemoved.forEach(o => canvas.remove(o));
+  const json = canvas.toJSON();
+  tempRemoved.forEach(o => canvas.add(o));
+  if (showMargin) updateMarginGuide();
+  return json;
+}
+
+document.getElementById('save-json').addEventListener('click', function() {
+  const name = updateFilename();
+  const data = getCanvasData();
+  data._spriteMeta = {
+    activity: document.getElementById('activity-select').value,
+    emotion: document.getElementById('emotion-select').value,
+    variant: parseInt(document.getElementById('variant-input').value),
+    version: 1
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  downloadBlob(blob, `${name}.json`);
+});
+
+document.getElementById('load-json').addEventListener('click', () => {
+  document.getElementById('json-file-input').click();
+});
+
+document.getElementById('json-file-input').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      ignoreChanges = true;
+      canvas.loadFromJSON(data, function() {
+        canvas.renderAll();
+        ignoreChanges = false;
+        saveState();
+        updateMarginGuide();
+
+        if (data._spriteMeta) {
+          document.getElementById('activity-select').value = data._spriteMeta.activity || 'thinking';
+          document.getElementById('emotion-select').value = data._spriteMeta.emotion || 'neutral';
+          document.getElementById('variant-input').value = data._spriteMeta.variant || 0;
+          updateFilename();
+        } else {
+          const match = file.name.replace('.json', '').match(/^(\w+)_(\w+)_?(\d?)$/);
+          if (match) {
+            document.getElementById('activity-select').value = match[1];
+            document.getElementById('emotion-select').value = match[2];
+            document.getElementById('variant-input').value = match[3] || 0;
+            updateFilename();
+          }
+        }
+      });
+    } catch (err) {
+      alert('Invalid JSON file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  this.value = '';
+});
+
+document.getElementById('export-png').addEventListener('click', function() {
+  const name = updateFilename();
+  const guidesRemoved = [];
+  canvas.getObjects().forEach(o => {
+    if (o._isGuide || o._isPathDot) guidesRemoved.push(o);
+  });
+  guidesRemoved.forEach(o => canvas.remove(o));
+
+  const dataURL = canvas.toDataURL({ format: 'png', multiplier: 1 });
+
+  guidesRemoved.forEach(o => canvas.add(o));
+  if (showMargin) updateMarginGuide();
+  canvas.renderAll();
+
+  const link = document.createElement('a');
+  link.download = `${name}.png`;
+  link.href = dataURL;
+  link.click();
+});
+
+document.getElementById('clear-canvas').addEventListener('click', function() {
+  if (!confirm('Clear canvas? This cannot be undone.')) return;
+  canvas.clear();
+  canvas.backgroundColor = '#ffffff';
+  canvas.renderAll();
+  saveState();
+  updateMarginGuide();
+});
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// State matrix
+function buildMatrix() {
+  const table = document.getElementById('state-matrix');
+  let html = '<thead><tr><th></th>';
+  EMOTIONS.forEach(e => { html += `<th>${e.slice(0, 3)}</th>`; });
+  html += '</tr></thead><tbody>';
+
+  ACTIVITIES.forEach(act => {
+    html += `<tr><th>${act.slice(0, 5)}</th>`;
+    EMOTIONS.forEach(emo => {
+      const vc = VARIANT_COUNTS[emo];
+      const id = `matrix-${act}-${emo}`;
+      html += `<td class="matrix-cell" id="${id}" data-activity="${act}" data-emotion="${emo}">`;
+      html += `<div class="variant-dots">`;
+      for (let i = 0; i < vc; i++) {
+        html += `<span class="dot needed"></span>`;
+      }
+      html += `</div>`;
+      html += `</td>`;
+    });
+    html += '</tr>';
+  });
+
+  html += '<tr><th>sleep</th>';
+  html += `<td class="matrix-cell" id="matrix-sleeping" data-activity="sleeping" data-emotion="" colspan="5" style="text-align:center">1 sprite</td>`;
+  html += '</tr>';
+
+  html += '</tbody>';
+  table.innerHTML = html;
+
+  table.querySelectorAll('.matrix-cell').forEach(cell => {
+    cell.addEventListener('click', function() {
+      const act = this.dataset.activity;
+      const emo = this.dataset.emotion;
+      document.getElementById('activity-select').value = act;
+      if (emo) document.getElementById('emotion-select').value = emo;
+      document.getElementById('variant-input').value = 0;
+      updateFilename();
+    });
+  });
+}
+
+function updateMatrixHighlight() {
+  const act = document.getElementById('activity-select').value;
+  const emo = document.getElementById('emotion-select').value;
+  document.querySelectorAll('.matrix-cell').forEach(c => c.classList.remove('current'));
+  const id = act === 'sleeping' ? 'matrix-sleeping' : `matrix-${act}-${emo}`;
+  const cell = document.getElementById(id);
+  if (cell) cell.classList.add('current');
+}
+
+buildMatrix();
+updateFilename();
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+
+  const key = e.key.toLowerCase();
+  const ctrl = e.ctrlKey || e.metaKey;
+
+  if (ctrl && key === 'z') {
+    e.preventDefault();
+    undo();
+    return;
+  }
+  if (ctrl && key === 'y') {
+    e.preventDefault();
+    redo();
+    return;
+  }
+  if (ctrl && key === 's') {
+    e.preventDefault();
+    document.getElementById('save-json').click();
+    return;
+  }
+  if (ctrl && key === 'd') {
+    e.preventDefault();
+    duplicateSelected();
+    return;
+  }
+
+  if (key === 'delete' || key === 'backspace') {
+    const obj = canvas.getActiveObject();
+    if (obj) {
+      e.preventDefault();
+      canvas.remove(obj);
+      canvas.renderAll();
+    }
+    return;
+  }
+
+  if (key === 'enter' && currentTool === 'path') {
+    e.preventDefault();
+    finishPath();
+    return;
+  }
+
+  if (key === 'escape') {
+    if (currentTool === 'path') {
+      pathPoints = [];
+      pathDots.forEach(d => canvas.remove(d));
+      if (pathPreviewLine) canvas.remove(pathPreviewLine);
+      pathDots = [];
+      pathPreviewLine = null;
+      canvas.renderAll();
+    }
+    selectTool('select');
+    return;
+  }
+
+  const toolMap = { v: 'select', c: 'circle', e: 'ellipse', l: 'line', p: 'path', r: 'rect', d: 'draw' };
+  if (!ctrl && toolMap[key]) {
+    selectTool(toolMap[key]);
+  }
+});
+
+document.getElementById('undo-btn').addEventListener('click', undo);
+document.getElementById('redo-btn').addEventListener('click', redo);
+
+// Gallery
+function buildGallery() {
+  if (typeof SPRITE_DATA === 'undefined') {
+    document.getElementById('gallery').style.display = 'none';
+    return;
+  }
+
+  const grid = document.getElementById('gallery-grid');
+  const allActivities = [...ACTIVITIES, 'sleeping'];
+
+  allActivities.forEach(act => {
+    const section = document.createElement('div');
+    section.className = 'gallery-activity';
+
+    const label = document.createElement('div');
+    label.className = 'gallery-activity-label';
+    label.textContent = act;
+    section.appendChild(label);
+
+    const row = document.createElement('div');
+    row.className = 'gallery-row';
+
+    const keys = Object.keys(SPRITE_DATA).filter(k => k.startsWith(act + '_')).sort();
+    if (keys.length === 0) return;
+
+    keys.forEach(key => {
+      const thumb = document.createElement('div');
+      thumb.className = 'gallery-thumb';
+      thumb.title = key;
+      thumb.dataset.spriteKey = key;
+
+      const thumbCanvas = document.createElement('canvas');
+      thumbCanvas.width = 200;
+      thumbCanvas.height = 200;
+      thumb.appendChild(thumbCanvas);
+
+      const fc = new fabric.StaticCanvas(thumbCanvas, {
+        width: 200,
+        height: 200,
+        backgroundColor: '#ffffff'
+      });
+
+      const spriteData = JSON.parse(JSON.stringify(SPRITE_DATA[key]));
+      fc.loadFromJSON(spriteData, () => fc.renderAll());
+
+      thumb.addEventListener('click', () => {
+        loadSpriteFromGallery(key);
+        document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+        thumb.classList.add('active');
+      });
+
+      row.appendChild(thumb);
+    });
+
+    section.appendChild(row);
+    grid.appendChild(section);
+  });
+}
+
+function loadSpriteFromGallery(key) {
+  const data = JSON.parse(JSON.stringify(SPRITE_DATA[key]));
+  ignoreChanges = true;
+  canvas.loadFromJSON(data, () => {
+    canvas.renderAll();
+    ignoreChanges = false;
+    saveState();
+    updateMarginGuide();
+
+    if (data._spriteMeta) {
+      document.getElementById('activity-select').value = data._spriteMeta.activity || 'thinking';
+      document.getElementById('emotion-select').value = data._spriteMeta.emotion || 'neutral';
+      document.getElementById('variant-input').value = data._spriteMeta.variant || 0;
+    } else {
+      const match = key.match(/^(\w+?)_(\w+?)_(\d)$/);
+      if (match) {
+        document.getElementById('activity-select').value = match[1];
+        document.getElementById('emotion-select').value = match[2];
+        document.getElementById('variant-input').value = match[3];
+      }
+    }
+    updateFilename();
+  });
+}
+
+buildGallery();
+</script>
+</body>
+</html>

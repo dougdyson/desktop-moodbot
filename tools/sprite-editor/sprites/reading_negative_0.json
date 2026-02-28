@@ -1,0 +1,183 @@
+{
+  "version": "5.3.1",
+  "objects": [
+    {
+      "type": "circle",
+      "left": 72,
+      "top": 85,
+      "radius": 6,
+      "fill": "black",
+      "stroke": "",
+      "strokeWidth": 0,
+      "originX": "center",
+      "originY": "center",
+      "strokeLineCap": "round"
+    },
+    {
+      "type": "circle",
+      "left": 128,
+      "top": 85,
+      "radius": 6,
+      "fill": "black",
+      "stroke": "",
+      "strokeWidth": 0,
+      "originX": "center",
+      "originY": "center",
+      "strokeLineCap": "round"
+    },
+    {
+      "type": "path",
+      "path": [
+        [
+          "M",
+          64,
+          83
+        ],
+        [
+          "Q",
+          72,
+          75,
+          80,
+          83
+        ]
+      ],
+      "fill": "",
+      "stroke": "black",
+      "strokeWidth": 2.5,
+      "strokeLineCap": "round",
+      "strokeLineJoin": "round",
+      "originX": "center",
+      "originY": "center"
+    },
+    {
+      "type": "path",
+      "path": [
+        [
+          "M",
+          120,
+          83
+        ],
+        [
+          "Q",
+          128,
+          75,
+          136,
+          83
+        ]
+      ],
+      "fill": "",
+      "stroke": "black",
+      "strokeWidth": 2.5,
+      "strokeLineCap": "round",
+      "strokeLineJoin": "round",
+      "originX": "center",
+      "originY": "center"
+    },
+    {
+      "type": "line",
+      "x1": 62,
+      "y1": 69,
+      "x2": 80,
+      "y2": 73,
+      "left": 71,
+      "top": 71,
+      "stroke": "black",
+      "strokeWidth": 2.5,
+      "strokeLineCap": "round",
+      "fill": "",
+      "originX": "center",
+      "originY": "center"
+    },
+    {
+      "type": "line",
+      "x1": 138,
+      "y1": 69,
+      "x2": 120,
+      "y2": 73,
+      "left": 129,
+      "top": 71,
+      "stroke": "black",
+      "strokeWidth": 2.5,
+      "strokeLineCap": "round",
+      "fill": "",
+      "originX": "center",
+      "originY": "center"
+    },
+    {
+      "type": "path",
+      "path": [
+        [
+          "M",
+          72,
+          126
+        ],
+        [
+          "Q",
+          100,
+          103,
+          128,
+          126
+        ]
+      ],
+      "fill": "",
+      "stroke": "black",
+      "strokeWidth": 4,
+      "strokeLineCap": "round",
+      "strokeLineJoin": "round",
+      "originX": "center",
+      "originY": "center"
+    },
+    {
+      "type": "line",
+      "x1": 45,
+      "y1": 150,
+      "x2": 95,
+      "y2": 150,
+      "left": 70,
+      "top": 150,
+      "stroke": "black",
+      "strokeWidth": 1.5,
+      "strokeLineCap": "round",
+      "fill": "",
+      "originX": "center",
+      "originY": "center"
+    },
+    {
+      "type": "line",
+      "x1": 45,
+      "y1": 158,
+      "x2": 85,
+      "y2": 158,
+      "left": 65,
+      "top": 158,
+      "stroke": "black",
+      "strokeWidth": 1.5,
+      "strokeLineCap": "round",
+      "fill": "",
+      "originX": "center",
+      "originY": "center"
+    },
+    {
+      "type": "line",
+      "x1": 45,
+      "y1": 166,
+      "x2": 90,
+      "y2": 166,
+      "left": 67.5,
+      "top": 166,
+      "stroke": "black",
+      "strokeWidth": 1.5,
+      "strokeLineCap": "round",
+      "fill": "",
+      "originX": "center",
+      "originY": "center"
+    }
+  ],
+  "background": "#ffffff",
+  "_spriteMeta": {
+    "activity": "reading",
+    "emotion": "negative",
+    "variant": 0,
+    "version": 1
+  }
+}
