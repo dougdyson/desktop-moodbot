@@ -30,7 +30,14 @@ class AgentMonitor:
             return False
 
         file_changed = str(active) != self._last_path or mtime != self._last_mtime
-        # Always recompute so sleep detection can trigger even when idle
+
+        if not file_changed and self._current_mood is not None:
+            if not self._current_mood.sleeping:
+                session = self.parser.parse_session(active, last_n=100)
+                if self.engine._is_sleeping(session):
+                    self._current_mood = self.engine.compute(session)
+            return False
+
         session = self.parser.parse_session(active, last_n=100)
         self._current_mood = self.engine.compute(session)
         self._last_mtime = mtime
