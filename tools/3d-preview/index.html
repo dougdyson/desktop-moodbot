@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DTMB 3D Preview — Desktop Mood Bot</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #111;
+  color: #ccc;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  overflow: hidden;
+  height: 100vh;
+}
+#canvas-container { width: 100%; height: 100%; position: relative; }
+#info-panel {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 16px;
+  font-size: 12px;
+  min-width: 200px;
+  backdrop-filter: blur(10px);
+}
+#info-panel h2 {
+  font-size: 14px;
+  color: #fff;
+  margin-bottom: 8px;
+}
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.info-row .label { color: #888; }
+.info-row .value { color: #4a9eff; font-weight: 600; }
+#mood-status { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); }
+#connection-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef4444;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+#connection-dot.live { background: #22c55e; }
+#controls-hint {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.5);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 11px;
+  color: #666;
+}
+</style>
+</head>
+<body>
+<div id="canvas-container"></div>
+
+<div id="info-panel">
+  <h2>Desktop Mood Bot</h2>
+  <div class="info-row"><span class="label">Enclosure</span><span class="value">v3</span></div>
+  <div class="info-row"><span class="label">Display</span><span class="value">CoreInk 200x200</span></div>
+  <div class="info-row"><span class="label">Body</span><span class="value">44.6 x 60.6 x 20.6mm</span></div>
+  <div class="info-row"><span class="label">Tilt</span><span class="value">12 deg</span></div>
+  <div id="mood-status">
+    <div><span id="connection-dot"></span><span id="status-text">Connecting...</span></div>
+    <div class="info-row" style="margin-top:6px"><span class="label">Activity</span><span class="value" id="activity-val">—</span></div>
+    <div class="info-row"><span class="label">Emotion</span><span class="value" id="emotion-val">—</span></div>
+    <div class="info-row"><span class="label">Score</span><span class="value" id="score-val">—</span></div>
+  </div>
+</div>
+
+<div id="controls-hint">Drag to orbit &middot; Scroll to zoom &middot; Right-drag to pan</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
+// === Hardware dimensions (mm, used as scene units) ===
+const HW_W = 40, HW_H = 56, HW_D = 16;
+const WALL = 2.0, TOL = 0.3;
+const EDGE_R = 3;
+const ENC_W = HW_W + 2 * (WALL + TOL);  // 44.6
+const ENC_H = HW_H + 2 * (WALL + TOL);  // 60.6
+const ENC_D = HW_D + 2 * (WALL + TOL);  // 20.6
+const CI_Z0 = WALL + TOL;
+const TILT = -12;  // degrees
+
+const DISP_W = 27.6, DISP_H = 27.6;
+const DISP_CUT_W = DISP_W + 1.0;
+const DISP_CUT_H = DISP_H + 1.0;
+const DISP_Z = CI_Z0 + 34;  // center from enclosure bottom
+
+const FOOT_W = ENC_W * 0.28;
+const FOOT_D = ENC_D * 0.85;
+const FOOT_H = 5;
+const FOOT_GAP = ENC_W * 0.12;
+
+// === Scene setup ===
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x111111);
+
+const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 500);
+camera.position.set(40, 50, 80);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 25, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 30;
+controls.maxDistance = 200;
+
+// === Lighting ===
+const ambient = new THREE.AmbientLight(0x404060, 0.6);
+scene.add(ambient);
+
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+keyLight.position.set(30, 60, 40);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.set(1024, 1024);
+keyLight.shadow.camera.near = 10;
+keyLight.shadow.camera.far = 150;
+keyLight.shadow.camera.left = -40;
+keyLight.shadow.camera.right = 40;
+keyLight.shadow.camera.top = 40;
+keyLight.shadow.camera.bottom = -40;
+scene.add(keyLight);
+
+const fillLight = new THREE.DirectionalLight(0x8888ff, 0.3);
+fillLight.position.set(-20, 30, -20);
+scene.add(fillLight);
+
+const rimLight = new THREE.DirectionalLight(0xffffff, 0.4);
+rimLight.position.set(-10, 10, -50);
+scene.add(rimLight);
+
+// === Ground plane ===
+const groundGeo = new THREE.PlaneGeometry(200, 200);
+const groundMat = new THREE.MeshStandardMaterial({
+  color: 0x1a1a2e,
+  roughness: 0.8,
+  metalness: 0.1
+});
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -0.5;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// === Materials ===
+const shellMat = new THREE.MeshStandardMaterial({
+  color: 0xf0f0f0,
+  roughness: 0.35,
+  metalness: 0.05,
+});
+
+const darkMat = new THREE.MeshStandardMaterial({
+  color: 0x333333,
+  roughness: 0.5,
+  metalness: 0.2,
+});
+
+const screenBorderMat = new THREE.MeshStandardMaterial({
+  color: 0x222222,
+  roughness: 0.8,
+});
+
+const usbMat = new THREE.MeshStandardMaterial({
+  color: 0xaaaaaa,
+  roughness: 0.3,
+  metalness: 0.8,
+});
+
+// === Build enclosure ===
+const enclosureGroup = new THREE.Group();
+
+// Main body (rounded box)
+const bodyGeo = new RoundedBoxGeometry(ENC_W, ENC_H, ENC_D, 4, EDGE_R);
+const body = new THREE.Mesh(bodyGeo, shellMat);
+body.position.set(0, ENC_H / 2, 0);
+body.castShadow = true;
+enclosureGroup.add(body);
+
+// Screen bezel (dark recessed frame) — front face is +Z
+const bezelGeo = new THREE.BoxGeometry(DISP_CUT_W + 3, DISP_CUT_H + 3, 1.0);
+const bezel = new THREE.Mesh(bezelGeo, screenBorderMat);
+bezel.position.set(0, DISP_Z, ENC_D / 2 - 0.3);
+enclosureGroup.add(bezel);
+
+// E-ink screen (white surface — will show the sprite face)
+const screenGeo = new THREE.PlaneGeometry(DISP_CUT_W, DISP_CUT_H);
+const screenTexture = new THREE.CanvasTexture(makeScreenCanvas());
+screenTexture.minFilter = THREE.LinearFilter;
+screenTexture.magFilter = THREE.LinearFilter;
+const screenMat = new THREE.MeshBasicMaterial({
+  map: screenTexture,
+  polygonOffset: true,
+  polygonOffsetFactor: -1,
+  polygonOffsetUnits: -1
+});
+const screen = new THREE.Mesh(screenGeo, screenMat);
+screen.position.set(0, DISP_Z, ENC_D / 2 + 0.5);
+enclosureGroup.add(screen);
+
+// USB-C port (bottom)
+const usbGeo = new THREE.BoxGeometry(9, 3, 3.5);
+const usb = new THREE.Mesh(usbGeo, usbMat);
+usb.position.set(-5, 0, 0);
+enclosureGroup.add(usb);
+
+// Side button cutouts (right side, +X)
+const switchGeo = new THREE.BoxGeometry(3, 8, 4);
+const switchMesh = new THREE.Mesh(switchGeo, darkMat);
+switchMesh.position.set(ENC_W / 2 + 0.5, CI_Z0 + 28, 0);
+enclosureGroup.add(switchMesh);
+
+const pwrGeo = new THREE.BoxGeometry(3, 5, 3);
+const pwrMesh = new THREE.Mesh(pwrGeo, darkMat);
+pwrMesh.position.set(ENC_W / 2 + 0.5, CI_Z0 + 23, 0);
+enclosureGroup.add(pwrMesh);
+
+// === Tilt the body ===
+const tiltGroup = new THREE.Group();
+tiltGroup.add(enclosureGroup);
+tiltGroup.rotation.x = THREE.MathUtils.degToRad(TILT);
+tiltGroup.position.y = FOOT_H;
+scene.add(tiltGroup);
+
+// === Feet ===
+for (const sign of [-1, 1]) {
+  const footGeo = new RoundedBoxGeometry(FOOT_W, FOOT_H, FOOT_D, 3, 2);
+  const foot = new THREE.Mesh(footGeo, shellMat);
+  foot.position.set(sign * (FOOT_GAP / 2 + FOOT_W / 2), FOOT_H / 2, 0);
+  foot.castShadow = true;
+  scene.add(foot);
+}
+
+// === Screen rendering ===
+function makeScreenCanvas() {
+  const c = document.createElement('canvas');
+  c.width = 200;
+  c.height = 200;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, 200, 200);
+  // Default face
+  ctx.fillStyle = '#000';
+  ctx.beginPath(); ctx.arc(72, 80, 8, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(128, 80, 8, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(75, 77, 2.5, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(131, 77, 2.5, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(82, 128); ctx.lineTo(118, 128); ctx.stroke();
+  return c;
+}
+
+function updateScreenFromBitmap(bitmap) {
+  const c = document.createElement('canvas');
+  c.width = 200;
+  c.height = 200;
+  const ctx = c.getContext('2d');
+
+  const raw = atob(bitmap);
+  const bytes = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+
+  const imgData = ctx.createImageData(200, 200);
+  const pixels = imgData.data;
+
+  for (let y = 0; y < 200; y++) {
+    for (let x = 0; x < 200; x++) {
+      const byteIdx = y * 25 + Math.floor(x / 8);
+      const bitIdx = 7 - (x % 8);
+      const isBlack = (bytes[byteIdx] >> bitIdx) & 1;
+      const offset = (y * 200 + x) * 4;
+      const v = isBlack ? 0 : 255;
+      pixels[offset] = v;
+      pixels[offset + 1] = v;
+      pixels[offset + 2] = v;
+      pixels[offset + 3] = 255;
+    }
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+  screenTexture.image = c;
+  screenTexture.needsUpdate = true;
+}
+
+// === Live mood polling ===
+const MOODBOT_URL = 'http://localhost:9400';
+let lastBitmap = null;
+
+async function pollMood() {
+  try {
+    const res = await fetch(`${MOODBOT_URL}/mood/claude-code`);
+    if (!res.ok) throw new Error('fetch failed');
+    const mood = await res.json();
+
+    document.getElementById('connection-dot').className = 'live';
+    document.getElementById('status-text').textContent = mood.sleeping ? 'Sleeping' : 'Live';
+    document.getElementById('activity-val').textContent = mood.activity;
+    document.getElementById('emotion-val').textContent = mood.emotion;
+    const s = mood.sentiment_score;
+    document.getElementById('score-val').textContent = (s >= 0 ? '+' : '') + (s * 100).toFixed(0) + '%';
+
+    if (mood.bitmap && mood.bitmap !== lastBitmap) {
+      updateScreenFromBitmap(mood.bitmap);
+      lastBitmap = mood.bitmap;
+    }
+  } catch {
+    document.getElementById('connection-dot').className = '';
+    document.getElementById('status-text').textContent = 'Offline';
+  }
+}
+
+pollMood();
+setInterval(pollMood, 5000);
+
+// === Animation ===
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+// === Resize ===
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
