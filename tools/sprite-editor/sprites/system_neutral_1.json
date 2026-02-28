@@ -1,0 +1,156 @@
+{
+  "version": "5.3.1",
+  "objects": [
+    {
+      "type": "circle",
+      "left": 74,
+      "top": 80,
+      "radius": 8,
+      "fill": "black",
+      "stroke": "",
+      "strokeWidth": 0,
+      "originX": "center",
+      "originY": "center",
+      "strokeLineCap": "round"
+    },
+    {
+      "type": "circle",
+      "left": 130,
+      "top": 80,
+      "radius": 8,
+      "fill": "black",
+      "stroke": "",
+      "strokeWidth": 0,
+      "originX": "center",
+      "originY": "center",
+      "strokeLineCap": "round"
+    },
+    {
+      "type": "circle",
+      "left": 77,
+      "top": 77,
+      "radius": 2.5,
+      "fill": "white",
+      "stroke": "",
+      "strokeWidth": 0,
+      "originX": "center",
+      "originY": "center",
+      "strokeLineCap": "round"
+    },
+    {
+      "type": "circle",
+      "left": 133,
+      "top": 77,
+      "radius": 2.5,
+      "fill": "white",
+      "stroke": "",
+      "strokeWidth": 0,
+      "originX": "center",
+      "originY": "center",
+      "strokeLineCap": "round"
+    },
+    {
+      "type": "path",
+      "path": [
+        [
+          "M",
+          80,
+          128
+        ],
+        [
+          "Q",
+          100,
+          132,
+          120,
+          128
+        ]
+      ],
+      "fill": "",
+      "stroke": "black",
+      "strokeWidth": 3,
+      "strokeLineCap": "round",
+      "strokeLineJoin": "round",
+      "originX": "center",
+      "originY": "center"
+    },
+    {
+      "type": "circle",
+      "left": 160,
+      "top": 40,
+      "radius": 10,
+      "fill": "",
+      "stroke": "black",
+      "strokeWidth": 2,
+      "originX": "center",
+      "originY": "center",
+      "strokeLineCap": "round"
+    },
+    {
+      "type": "circle",
+      "left": 160,
+      "top": 40,
+      "radius": 4,
+      "fill": "black",
+      "stroke": "",
+      "strokeWidth": 0,
+      "originX": "center",
+      "originY": "center",
+      "strokeLineCap": "round"
+    },
+    {
+      "type": "circle",
+      "left": 160,
+      "top": 26,
+      "radius": 2,
+      "fill": "black",
+      "stroke": "",
+      "strokeWidth": 0,
+      "originX": "center",
+      "originY": "center",
+      "strokeLineCap": "round"
+    },
+    {
+      "type": "circle",
+      "left": 160,
+      "top": 54,
+      "radius": 2,
+      "fill": "black",
+      "stroke": "",
+      "strokeWidth": 0,
+      "originX": "center",
+      "originY": "center",
+      "strokeLineCap": "round"
+    },
+    {
+      "type": "circle",
+      "left": 146,
+      "top": 40,
+      "radius": 2,
+      "fill": "black",
+      "stroke": "",
+      "strokeWidth": 0,
+      "originX": "center",
+      "originY": "center",
+      "strokeLineCap": "round"
+    },
+    {
+      "type": "circle",
+      "left": 174,
+      "top": 40,
+      "radius": 2,
+      "fill": "black",
+      "stroke": "",
+      "strokeWidth": 0,
+      "originX": "center",
+      "originY": "center",
+      "strokeLineCap": "round"
+    }
+  ],
+  "background": "#ffffff",
+  "_spriteMeta": {
+    "activity": "system",
+    "emotion": "neutral",
+    "variant": 1,
+    "version": 1
+  }
+}

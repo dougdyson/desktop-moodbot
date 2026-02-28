@@ -1,0 +1,120 @@
+{
+  "version": "5.3.1",
+  "objects": [
+    {
+      "type": "circle",
+      "left": 75,
+      "top": 75,
+      "radius": 8,
+      "fill": "black",
+      "stroke": "",
+      "strokeWidth": 0,
+      "originX": "center",
+      "originY": "center",
+      "strokeLineCap": "round"
+    },
+    {
+      "type": "circle",
+      "left": 131,
+      "top": 75,
+      "radius": 8,
+      "fill": "black",
+      "stroke": "",
+      "strokeWidth": 0,
+      "originX": "center",
+      "originY": "center",
+      "strokeLineCap": "round"
+    },
+    {
+      "type": "circle",
+      "left": 78,
+      "top": 72,
+      "radius": 2.5,
+      "fill": "white",
+      "stroke": "",
+      "strokeWidth": 0,
+      "originX": "center",
+      "originY": "center",
+      "strokeLineCap": "round"
+    },
+    {
+      "type": "circle",
+      "left": 134,
+      "top": 72,
+      "radius": 2.5,
+      "fill": "white",
+      "stroke": "",
+      "strokeWidth": 0,
+      "originX": "center",
+      "originY": "center",
+      "strokeLineCap": "round"
+    },
+    {
+      "type": "path",
+      "path": [
+        [
+          "M",
+          70,
+          125
+        ],
+        [
+          "Q",
+          100,
+          155,
+          130,
+          125
+        ]
+      ],
+      "fill": "",
+      "stroke": "black",
+      "strokeWidth": 4,
+      "strokeLineCap": "round",
+      "strokeLineJoin": "round",
+      "originX": "center",
+      "originY": "center"
+    },
+    {
+      "type": "circle",
+      "left": 155,
+      "top": 50,
+      "radius": 12,
+      "fill": "",
+      "stroke": "black",
+      "strokeWidth": 2.5,
+      "originX": "center",
+      "originY": "center",
+      "strokeLineCap": "round"
+    },
+    {
+      "type": "circle",
+      "left": 143,
+      "top": 68,
+      "radius": 6,
+      "fill": "",
+      "stroke": "black",
+      "strokeWidth": 2,
+      "originX": "center",
+      "originY": "center",
+      "strokeLineCap": "round"
+    },
+    {
+      "type": "circle",
+      "left": 137,
+      "top": 80,
+      "radius": 3,
+      "fill": "black",
+      "stroke": "",
+      "strokeWidth": 0,
+      "originX": "center",
+      "originY": "center",
+      "strokeLineCap": "round"
+    }
+  ],
+  "background": "#ffffff",
+  "_spriteMeta": {
+    "activity": "thinking",
+    "emotion": "positive",
+    "variant": 0,
+    "version": 1
+  }
+}

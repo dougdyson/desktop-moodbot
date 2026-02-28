@@ -1,0 +1,207 @@
+{
+  "version": "5.3.1",
+  "objects": [
+    {
+      "type": "circle",
+      "left": 72,
+      "top": 85,
+      "radius": 7,
+      "fill": "black",
+      "stroke": "",
+      "strokeWidth": 0,
+      "originX": "center",
+      "originY": "center",
+      "strokeLineCap": "round"
+    },
+    {
+      "type": "circle",
+      "left": 128,
+      "top": 85,
+      "radius": 7,
+      "fill": "black",
+      "stroke": "",
+      "strokeWidth": 0,
+      "originX": "center",
+      "originY": "center",
+      "strokeLineCap": "round"
+    },
+    {
+      "type": "path",
+      "path": [
+        [
+          "M",
+          63,
+          83
+        ],
+        [
+          "Q",
+          72,
+          74,
+          81,
+          83
+        ]
+      ],
+      "fill": "",
+      "stroke": "black",
+      "strokeWidth": 2.5,
+      "strokeLineCap": "round",
+      "strokeLineJoin": "round",
+      "originX": "center",
+      "originY": "center"
+    },
+    {
+      "type": "path",
+      "path": [
+        [
+          "M",
+          119,
+          83
+        ],
+        [
+          "Q",
+          128,
+          74,
+          137,
+          83
+        ]
+      ],
+      "fill": "",
+      "stroke": "black",
+      "strokeWidth": 2.5,
+      "strokeLineCap": "round",
+      "strokeLineJoin": "round",
+      "originX": "center",
+      "originY": "center"
+    },
+    {
+      "type": "circle",
+      "left": 75,
+      "top": 82,
+      "radius": 2.5,
+      "fill": "white",
+      "stroke": "",
+      "strokeWidth": 0,
+      "originX": "center",
+      "originY": "center",
+      "strokeLineCap": "round"
+    },
+    {
+      "type": "circle",
+      "left": 131,
+      "top": 82,
+      "radius": 2.5,
+      "fill": "white",
+      "stroke": "",
+      "strokeWidth": 0,
+      "originX": "center",
+      "originY": "center",
+      "strokeLineCap": "round"
+    },
+    {
+      "type": "line",
+      "x1": 64,
+      "y1": 71,
+      "x2": 78,
+      "y2": 69,
+      "left": 71,
+      "top": 70,
+      "stroke": "black",
+      "strokeWidth": 2,
+      "strokeLineCap": "round",
+      "fill": "",
+      "originX": "center",
+      "originY": "center"
+    },
+    {
+      "type": "line",
+      "x1": 122,
+      "y1": 69,
+      "x2": 136,
+      "y2": 71,
+      "left": 129,
+      "top": 70,
+      "stroke": "black",
+      "strokeWidth": 2,
+      "strokeLineCap": "round",
+      "fill": "",
+      "originX": "center",
+      "originY": "center"
+    },
+    {
+      "type": "path",
+      "path": [
+        [
+          "M",
+          78,
+          128
+        ],
+        [
+          "Q",
+          100,
+          116,
+          122,
+          131
+        ]
+      ],
+      "fill": "",
+      "stroke": "black",
+      "strokeWidth": 3.5,
+      "strokeLineCap": "round",
+      "strokeLineJoin": "round",
+      "originX": "center",
+      "originY": "center"
+    },
+    {
+      "type": "line",
+      "x1": 45,
+      "y1": 150,
+      "x2": 95,
+      "y2": 150,
+      "left": 70,
+      "top": 150,
+      "stroke": "black",
+      "strokeWidth": 1.5,
+      "strokeLineCap": "round",
+      "fill": "",
+      "originX": "center",
+      "originY": "center"
+    },
+    {
+      "type": "line",
+      "x1": 45,
+      "y1": 158,
+      "x2": 85,
+      "y2": 158,
+      "left": 65,
+      "top": 158,
+      "stroke": "black",
+      "strokeWidth": 1.5,
+      "strokeLineCap": "round",
+      "fill": "",
+      "originX": "center",
+      "originY": "center"
+    },
+    {
+      "type": "line",
+      "x1": 45,
+      "y1": 166,
+      "x2": 90,
+      "y2": 166,
+      "left": 67.5,
+      "top": 166,
+      "stroke": "black",
+      "strokeWidth": 1.5,
+      "strokeLineCap": "round",
+      "fill": "",
+      "originX": "center",
+      "originY": "center"
+    }
+  ],
+  "background": "#ffffff",
+  "_spriteMeta": {
+    "activity": "reading",
+    "emotion": "uneasy",
+    "variant": 0,
+    "version": 1
+  }
+}
