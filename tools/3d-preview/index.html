@@ -95,25 +95,41 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
-// === Hardware dimensions (mm, used as scene units) ===
-const HW_W = 40, HW_H = 56, HW_D = 16;
-const WALL = 2.0, TOL = 0.3;
-const EDGE_R = 3;
-const ENC_W = HW_W + 2 * (WALL + TOL);  // 44.6
-const ENC_H = HW_H + 2 * (WALL + TOL);  // 60.6
-const ENC_D = HW_D + 2 * (WALL + TOL);  // 20.6
-const CI_Z0 = WALL + TOL;
-const TILT = -12;  // degrees
+// === Dimensions loaded from hardware/dimensions.json ===
+// Source of truth: hardware/enclosures/dtmb_enclosure_v3.scad
+// Regenerate with: node tools/sync-dimensions.js
+let D = null;
+try {
+  const resp = await fetch('../../hardware/dimensions.json');
+  D = await resp.json();
+  console.log(`Loaded ${Object.keys(D).length - 2} dimensions from SCAD (${D._generated})`);
+} catch {
+  console.warn('Could not load dimensions.json, using defaults');
+}
 
-const DISP_W = 27.6, DISP_H = 27.6;
-const DISP_CUT_W = DISP_W + 1.0;
-const DISP_CUT_H = DISP_H + 1.0;
-const DISP_Z = CI_Z0 + 34;  // center from enclosure bottom
+const HW_W = D?.hw_w ?? 40, HW_H = D?.hw_h ?? 56, HW_D = D?.hw_d ?? 16;
+const WALL = D?.wall ?? 2.0, TOL = D?.tol ?? 0.3;
+const EDGE_R = D?.edge_r ?? 3;
+const ENC_W = D?.enc_w ?? 44.6;
+const ENC_H = D?.enc_h ?? 60.6;
+const ENC_D = D?.enc_d ?? 20.6;
+const CI_Z0 = D?.ci_z0 ?? 2.3;
+const TILT = D?.tilt ?? -12;
 
-const FOOT_W = ENC_W * 0.28;
-const FOOT_D = ENC_D * 0.85;
-const FOOT_H = 5;
-const FOOT_GAP = ENC_W * 0.12;
+const DISP_CUT_W = D?.disp_cut_w ?? 28.6;
+const DISP_CUT_H = D?.disp_cut_h ?? 28.6;
+const DISP_Z = D?.disp_cut_z ?? 36.3;
+
+const FOOT_W = D?.foot_w ?? (ENC_W * 0.28);
+const FOOT_D = D?.foot_d ?? (ENC_D * 0.85);
+const FOOT_H = D?.foot_h ?? 5;
+const FOOT_GAP = D?.foot_gap ?? (ENC_W * 0.12);
+
+// Update info panel with actual dims
+document.querySelector('#info-panel .value').textContent =
+  `v3${D?._source ? '' : ' (defaults)'}`;
+document.querySelectorAll('#info-panel .info-row')[2].querySelector('.value').textContent =
+  `${ENC_W} x ${ENC_H} x ${ENC_D}mm`;
 
 // === Scene setup ===
 const scene = new THREE.Scene();
@@ -231,20 +247,24 @@ screen.position.set(0, DISP_Z, ENC_D / 2 + 0.5);
 enclosureGroup.add(screen);
 
 // USB-C port (bottom)
-const usbGeo = new THREE.BoxGeometry(9, 3, 3.5);
+const USBC_W = D?.hw_usbc_w ?? 9, USBC_D = D?.hw_usbc_d ?? 3.5, USBC_X = D?.hw_usbc_x ?? -5;
+const usbGeo = new THREE.BoxGeometry(USBC_W, 3, USBC_D);
 const usb = new THREE.Mesh(usbGeo, usbMat);
-usb.position.set(-5, 0, 0);
+usb.position.set(USBC_X, 0, 0);
 enclosureGroup.add(usb);
 
 // Side button cutouts (right side, +X)
-const switchGeo = new THREE.BoxGeometry(3, 8, 4);
+const SW_Z = D?.hw_sw_z ?? 28, SW_H = D?.hw_sw_h ?? 8, SW_D = D?.hw_sw_d ?? 4;
+const PWR_Z = D?.hw_pwr_z ?? 23, PWR_H = D?.hw_pwr_h ?? 5, PWR_D = D?.hw_pwr_d ?? 3;
+
+const switchGeo = new THREE.BoxGeometry(3, SW_H, SW_D);
 const switchMesh = new THREE.Mesh(switchGeo, darkMat);
-switchMesh.position.set(ENC_W / 2 + 0.5, CI_Z0 + 28, 0);
+switchMesh.position.set(ENC_W / 2 + 0.5, CI_Z0 + SW_Z, 0);
 enclosureGroup.add(switchMesh);
 
-const pwrGeo = new THREE.BoxGeometry(3, 5, 3);
+const pwrGeo = new THREE.BoxGeometry(3, PWR_H, PWR_D);
 const pwrMesh = new THREE.Mesh(pwrGeo, darkMat);
-pwrMesh.position.set(ENC_W / 2 + 0.5, CI_Z0 + 23, 0);
+pwrMesh.position.set(ENC_W / 2 + 0.5, CI_Z0 + PWR_Z, 0);
 enclosureGroup.add(pwrMesh);
 
 // === Tilt the body ===
