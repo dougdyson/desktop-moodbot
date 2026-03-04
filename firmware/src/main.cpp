@@ -24,6 +24,7 @@ String agent_name;
 bool is_sleeping = false;
 unsigned long last_success = 0;
 bool showing_offline = false;
+String last_display_key;
 
 void loadConfig() {
     prefs.begin("moodbot", true);
@@ -201,12 +202,23 @@ bool pollMoodServer() {
 
     const char* activity = doc["activity"] | "unknown";
     const char* emotion  = doc["emotion"]  | "neutral";
+    int variant          = doc["variant"]  | 0;
     is_sleeping          = doc["sleeping"]  | false;
     const char* bitmap   = doc["bitmap"]   | (const char*)nullptr;
+
+    char key_buf[64];
+    snprintf(key_buf, sizeof(key_buf), "%s_%s_%d_%d", activity, emotion, variant, is_sleeping);
+    String display_key(key_buf);
 
     Serial.printf("Mood: %s / %s (sleeping=%d, bitmap=%s)\n",
                   activity, emotion, is_sleeping,
                   bitmap ? "yes" : "no");
+
+    if (display_key == last_display_key) {
+        Serial.println("No change, skipping redraw");
+        return true;
+    }
+    last_display_key = display_key;
 
     if (bitmap) {
         renderBitmap(bitmap, strlen(bitmap));
