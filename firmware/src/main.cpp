@@ -136,6 +136,10 @@ void renderBitmap(const char* b64, int b64Len) {
         return;
     }
 
+    for (int i = 0; i < BITMAP_SIZE; i++) {
+        bitmap[i] = ~bitmap[i];
+    }
+
     sprite->drawFullBuff(bitmap, true);
     sprite->pushSprite();
 
