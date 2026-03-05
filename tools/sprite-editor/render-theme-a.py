@@ -4,14 +4,14 @@
 Same bezier/circle style as original but face fills ~70% of canvas.
 All activity decorations removed. Focus on expression only.
 
-Output: sprites/theme-a/*.png
+Output: sprites/assets/*.png
 """
 
 import sys
 from pathlib import Path
 from PIL import Image, ImageDraw
 
-OUT = Path(__file__).parent.parent.parent / "sprites" / "theme-a"
+OUT = Path(__file__).parent.parent.parent / "sprites" / "assets"
 OUT.mkdir(parents=True, exist_ok=True)
 
 ACTIVITIES = ["thinking", "conversing", "reading", "executing", "editing", "system"]
