@@ -8,7 +8,7 @@
 Ink_Sprite* sprite = nullptr;
 Preferences prefs;
 
-static const uint32_t POLL_INTERVAL_MS  = 30000;
+uint32_t poll_interval_ms               = 30000;
 static const uint32_t SLEEP_POLL_MS     = 300000;
 static const uint32_t OFFLINE_TIMEOUT   = 300000;
 static const int      BITMAP_SIZE       = 5000;
@@ -33,6 +33,7 @@ void loadConfig() {
     moodbot_host = prefs.getString("host", MOODBOT_HOST);
     moodbot_port = prefs.getUShort("port", MOODBOT_PORT);
     agent_name  = prefs.getString("agent", AGENT_NAME);
+    poll_interval_ms = prefs.getULong("poll", 30000);
     prefs.end();
 }
 
@@ -49,7 +50,8 @@ void printConfig() {
     Serial.printf("  host:  %s\n", moodbot_host.c_str());
     Serial.printf("  port:  %d\n", moodbot_port);
     Serial.printf("  agent: %s\n", agent_name.c_str());
-    Serial.println("Commands: ssid:<val>  pass:<val>  host:<val>  port:<val>  agent:<val>  reboot");
+    Serial.printf("  poll:  %lu ms\n", poll_interval_ms);
+    Serial.println("Commands: ssid:<val>  pass:<val>  host:<val>  port:<val>  agent:<val>  poll:<ms>  reboot");
     Serial.println("======================");
 }
 
@@ -176,8 +178,9 @@ bool pollMoodServer() {
 
     HTTPClient http;
     char url[128];
-    snprintf(url, sizeof(url), "http://%s:%d/mood/%s",
-             moodbot_host.c_str(), moodbot_port, agent_name.c_str());
+    snprintf(url, sizeof(url), "http://%s:%d/mood/%s?poll=%lu",
+             moodbot_host.c_str(), moodbot_port, agent_name.c_str(),
+             poll_interval_ms / 1000);
 
     Serial.printf("Polling: %s\n", url);
     http.begin(url);
@@ -275,6 +278,12 @@ void handleSerial() {
             agent_name = val;
             saveConfig("agent", val);
             Serial.printf("Agent set to: %s\n", val.c_str());
+        } else if (key == "poll") {
+            poll_interval_ms = val.toInt();
+            prefs.begin("moodbot", false);
+            prefs.putULong("poll", poll_interval_ms);
+            prefs.end();
+            Serial.printf("Poll interval set to: %lu ms\n", poll_interval_ms);
         } else {
             Serial.printf("Unknown key: %s\n", key.c_str());
         }
@@ -311,7 +320,7 @@ void loop() {
 
     static unsigned long last_poll = 0;
     unsigned long now = millis();
-    uint32_t interval = is_sleeping ? SLEEP_POLL_MS : POLL_INTERVAL_MS;
+    uint32_t interval = is_sleeping ? SLEEP_POLL_MS : poll_interval_ms;
 
     if (now - last_poll >= interval) {
         last_poll = now;

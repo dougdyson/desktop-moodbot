@@ -1,6 +1,9 @@
 import json
+import os
+from datetime import datetime
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from typing import Optional
+from urllib.parse import urlparse, parse_qs
 
 from watcher.monitor import WatcherLoop
 
@@ -14,11 +17,13 @@ def set_watcher(watcher: WatcherLoop) -> None:
 
 class MoodHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
-        path = self.path.rstrip("/")
+        parsed = urlparse(self.path)
+        path = parsed.path.rstrip("/")
+        params = parse_qs(parsed.query)
 
         if path.startswith("/mood/"):
             agent = path[6:]
-            self._handle_mood(agent)
+            self._handle_mood(agent, params)
         elif path == "/mood":
             self._handle_agents_list()
         elif path.startswith("/firmware/latest"):
@@ -28,7 +33,7 @@ class MoodHandler(BaseHTTPRequestHandler):
         else:
             self._respond_error(404, "Not found")
 
-    def _handle_mood(self, agent: str) -> None:
+    def _handle_mood(self, agent: str, params: dict) -> None:
         if not _watcher:
             self._respond_error(503, "Watcher not initialized")
             return
@@ -39,6 +44,7 @@ class MoodHandler(BaseHTTPRequestHandler):
             return
 
         self._respond_json(mood.to_dict())
+        self._log_poll(agent, params)
 
     def _handle_agents_list(self) -> None:
         if not _watcher:
@@ -79,6 +85,15 @@ class MoodHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+
+    def _log_poll(self, agent: str, params: dict) -> None:
+        log_path = os.environ.get("MOODBOT_BATTERY_LOG")
+        if not log_path:
+            return
+        poll = params.get("poll", ["?"])[0]
+        line = f"{datetime.now().isoformat(timespec='seconds')} poll={poll}s agent={agent}\n"
+        with open(log_path, "a") as f:
+            f.write(line)
 
     def log_message(self, format, *args) -> None:
         pass
