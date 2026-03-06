@@ -321,8 +321,15 @@ void loop() {
     static unsigned long last_poll = 0;
     unsigned long now = millis();
     uint32_t interval = is_sleeping ? SLEEP_POLL_MS : poll_interval_ms;
+    bool force_poll = M5.BtnMID.wasPressed() || M5.BtnUP.wasPressed() ||
+                      M5.BtnDOWN.wasPressed() || M5.BtnEXT.wasPressed();
 
-    if (now - last_poll >= interval) {
+    if (force_poll) {
+        Serial.println("Button press — forcing poll");
+        last_display_key = "";
+    }
+
+    if (force_poll || now - last_poll >= interval) {
         last_poll = now;
         if (pollMoodServer()) {
             last_success = now;
