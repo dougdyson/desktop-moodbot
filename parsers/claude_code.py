@@ -107,6 +107,7 @@ class ClaudeCodeParser(AgentParser):
 
         text_parts = []
         activity = Activity.THINKING
+        has_thinking = False
         tool_name = None
 
         for block in content_blocks:
@@ -116,14 +117,14 @@ class ClaudeCodeParser(AgentParser):
             block_type = block.get("type")
 
             if block_type == "thinking":
-                activity = Activity.THINKING
+                has_thinking = True
 
             elif block_type == "text":
                 raw_text = block.get("text", "")
                 cleaned = self._clean_text(raw_text)
                 if cleaned and not self._is_tool_call_boilerplate(cleaned):
                     text_parts.append(cleaned)
-                if activity == Activity.THINKING:
+                if not has_thinking:
                     activity = Activity.CONVERSING
 
             elif block_type == "tool_use":
