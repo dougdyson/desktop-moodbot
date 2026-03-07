@@ -11,3 +11,4 @@ venv/
 .env
 *.stl
 .DS_Store
+battery_test.log
