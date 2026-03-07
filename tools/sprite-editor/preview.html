@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sprite Preview — Desktop Mood Bot</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  padding: 24px;
+}
+h1 { font-size: 18px; color: #4a9eff; margin-bottom: 4px; }
+.subtitle { font-size: 12px; color: #666; margin-bottom: 24px; }
+.controls {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+.controls label { font-size: 12px; color: #a0a0c0; }
+.controls select, .controls input {
+  background: #16213e;
+  border: 1px solid #0f3460;
+  color: #e0e0e0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.controls button {
+  background: #0f3460;
+  border: 1px solid #4a9eff;
+  color: #e0e0e0;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.controls button:hover { background: #1a4a7e; }
+.controls button.active { background: #4a9eff; color: #000; }
+
+table { border-collapse: collapse; }
+th {
+  padding: 6px 8px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #4a9eff;
+}
+th.row-header { text-align: left; min-width: 80px; }
+td { padding: 4px; vertical-align: top; }
+.sprite-cell {
+  display: flex;
+  gap: 4px;
+}
+.sprite-wrap {
+  position: relative;
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+.sprite-wrap:hover {
+  border-color: #4a9eff;
+  transform: scale(1.05);
+  z-index: 1;
+}
+.sprite-wrap img {
+  display: block;
+  border-radius: 4px;
+  background: #fff;
+}
+.sprite-wrap .variant-label {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-size: 9px;
+  color: #999;
+}
+
+.zoom-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 320px;
+  height: 100vh;
+  background: #16213e;
+  border-left: 2px solid #0f3460;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  z-index: 100;
+  transition: transform 0.2s;
+  transform: translateX(100%);
+}
+.zoom-panel.visible { transform: translateX(0); }
+.zoom-panel img {
+  width: 200px;
+  height: 200px;
+  background: #fff;
+  border: 2px solid #0f3460;
+  border-radius: 4px;
+  image-rendering: pixelated;
+}
+.zoom-panel .zoom-label {
+  font-size: 13px;
+  color: #4a9eff;
+  font-family: monospace;
+}
+.zoom-panel .zoom-info {
+  font-size: 11px;
+  color: #a0a0c0;
+  text-align: center;
+  line-height: 1.5;
+}
+.zoom-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.sleep-row { margin-top: 16px; }
+.sleep-row h3 {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #4a9eff;
+  margin-bottom: 6px;
+}
+</style>
+</head>
+<body>
+
+<h1>Sprite Preview</h1>
+<div class="subtitle">Theme A v2 — 8-channel design vocabulary — 73 sprites</div>
+
+<div class="controls">
+  <label>Size:</label>
+  <select id="size-select">
+    <option value="48">48px (overview)</option>
+    <option value="80" selected>80px (default)</option>
+    <option value="120">120px (detail)</option>
+    <option value="200">200px (actual size)</option>
+  </select>
+  <label>Background:</label>
+  <select id="bg-select">
+    <option value="#ffffff" selected>White</option>
+    <option value="#f0f0f0">Light gray</option>
+    <option value="#000000">Black (invert test)</option>
+  </select>
+  <button id="toggle-activity">Group by Activity</button>
+  <button id="toggle-emotion" class="active">Group by Emotion</button>
+</div>
+
+<div id="grid"></div>
+
+<div class="sleep-row">
+  <h3>Sleeping</h3>
+  <div id="sleep-sprite"></div>
+</div>
+
+<div class="zoom-panel" id="zoom-panel">
+  <button class="zoom-close" id="zoom-close">&times;</button>
+  <img id="zoom-img" src="" alt="">
+  <div class="zoom-label" id="zoom-label"></div>
+  <div class="zoom-info" id="zoom-info"></div>
+</div>
+
+<script>
+const ACTIVITIES = ['thinking', 'conversing', 'reading', 'executing', 'editing', 'system'];
+const EMOTIONS = ['negative', 'uneasy', 'neutral', 'positive', 'elated'];
+const VARIANT_COUNTS = { negative: 1, uneasy: 2, neutral: 4, positive: 4, elated: 1 };
+const SPRITE_PATH = '../../sprites/assets/';
+
+let thumbSize = 80;
+let groupBy = 'emotion';
+
+function spriteSrc(name) {
+  return SPRITE_PATH + name + '.png';
+}
+
+function makeThumb(name, variant) {
+  const wrap = document.createElement('div');
+  wrap.className = 'sprite-wrap';
+  const img = document.createElement('img');
+  img.src = spriteSrc(name);
+  img.width = thumbSize;
+  img.height = thumbSize;
+  img.alt = name;
+  img.style.background = document.getElementById('bg-select').value;
+  wrap.appendChild(img);
+
+  if (variant !== undefined) {
+    const lbl = document.createElement('span');
+    lbl.className = 'variant-label';
+    lbl.textContent = 'v' + variant;
+    wrap.appendChild(lbl);
+  }
+
+  wrap.addEventListener('click', () => showZoom(name));
+  return wrap;
+}
+
+function showZoom(name) {
+  const panel = document.getElementById('zoom-panel');
+  const img = document.getElementById('zoom-img');
+  const label = document.getElementById('zoom-label');
+  const info = document.getElementById('zoom-info');
+
+  img.src = spriteSrc(name);
+  img.style.background = document.getElementById('bg-select').value;
+  label.textContent = name + '.png';
+
+  const parts = name.match(/^(\w+)_(\w+)_(\d)$/);
+  if (parts) {
+    info.textContent = `Activity: ${parts[1]}\nEmotion: ${parts[2]}\nVariant: ${parts[3]}`;
+  } else {
+    info.textContent = name;
+  }
+
+  panel.classList.add('visible');
+}
+
+document.getElementById('zoom-close').addEventListener('click', () => {
+  document.getElementById('zoom-panel').classList.remove('visible');
+});
+
+function buildGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  if (groupBy === 'emotion') {
+    const table = document.createElement('table');
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    headerRow.appendChild(Object.assign(document.createElement('th'), { className: 'row-header' }));
+    EMOTIONS.forEach(e => {
+      const th = document.createElement('th');
+      th.textContent = e;
+      th.colSpan = VARIANT_COUNTS[e];
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    ACTIVITIES.forEach(act => {
+      const tr = document.createElement('tr');
+      const th = document.createElement('th');
+      th.className = 'row-header';
+      th.textContent = act;
+      tr.appendChild(th);
+
+      EMOTIONS.forEach(emo => {
+        const vc = VARIANT_COUNTS[emo];
+        for (let v = 0; v < vc; v++) {
+          const td = document.createElement('td');
+          const name = `${act}_${emo}_${v}`;
+          td.appendChild(makeThumb(name, vc > 1 ? v : undefined));
+          tr.appendChild(td);
+        }
+      });
+
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    grid.appendChild(table);
+  } else {
+    const table = document.createElement('table');
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    headerRow.appendChild(Object.assign(document.createElement('th'), { className: 'row-header' }));
+    ACTIVITIES.forEach(a => {
+      const th = document.createElement('th');
+      th.textContent = a;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    EMOTIONS.forEach(emo => {
+      const vc = VARIANT_COUNTS[emo];
+      for (let v = 0; v < vc; v++) {
+        const tr = document.createElement('tr');
+        const th = document.createElement('th');
+        th.className = 'row-header';
+        th.textContent = vc > 1 ? `${emo} v${v}` : emo;
+        tr.appendChild(th);
+
+        ACTIVITIES.forEach(act => {
+          const td = document.createElement('td');
+          const name = `${act}_${emo}_${v}`;
+          td.appendChild(makeThumb(name));
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+      }
+    });
+    table.appendChild(tbody);
+    grid.appendChild(table);
+  }
+
+  const sleepDiv = document.getElementById('sleep-sprite');
+  sleepDiv.innerHTML = '';
+  sleepDiv.appendChild(makeThumb('sleeping_0'));
+}
+
+document.getElementById('size-select').addEventListener('change', function() {
+  thumbSize = parseInt(this.value);
+  buildGrid();
+});
+
+document.getElementById('bg-select').addEventListener('change', buildGrid);
+
+document.getElementById('toggle-emotion').addEventListener('click', function() {
+  groupBy = 'emotion';
+  this.classList.add('active');
+  document.getElementById('toggle-activity').classList.remove('active');
+  buildGrid();
+});
+
+document.getElementById('toggle-activity').addEventListener('click', function() {
+  groupBy = 'activity';
+  this.classList.add('active');
+  document.getElementById('toggle-emotion').classList.remove('active');
+  buildGrid();
+});
+
+buildGrid();
+</script>
+</body>
+</html>
