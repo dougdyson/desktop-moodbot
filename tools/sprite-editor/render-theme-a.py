@@ -182,11 +182,6 @@ def draw_eyes(draw: ImageDraw.ImageDraw, emotion: str, activity: str, variant: i
     if emotion == "elated":
         draw_bezier(draw, (lx - 16, ly - 28), (lx, ly - 36), (lx + 16, ly - 28), 4)
         draw_bezier(draw, (rx - 16, ry - 28), (rx, ry - 36), (rx + 16, ry - 28), 4)
-        for dx, dy, sign in [(-26, -18, -1), (26, -18, 1)]:
-            bx = (lx if sign == -1 else rx) + dx
-            by = (ly if sign == -1 else ry) + dy
-            draw_line(draw, bx - 5, by - 5, bx + 5, by + 5, 3)
-            draw_line(draw, bx - 5, by + 5, bx + 5, by - 5, 3)
 
 
 # --- MOUTH ---
