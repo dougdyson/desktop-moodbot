@@ -25,6 +25,7 @@ bool is_sleeping = false;
 unsigned long last_success = 0;
 bool showing_offline = false;
 String last_display_key;
+bool wifi_powered = true;
 
 void loadConfig() {
     prefs.begin("moodbot", true);
@@ -92,6 +93,33 @@ void connectWiFi() {
         Serial.println("WiFi connection failed");
         showText("WiFi FAILED", "Check config", "via serial");
     }
+}
+
+bool wifiReconnect() {
+    Serial.println("WiFi powering on...");
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(wifi_ssid.c_str(), wifi_pass.c_str());
+
+    int attempts = 0;
+    while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+        delay(250);
+        attempts++;
+    }
+
+    wifi_powered = true;
+    if (WiFi.status() == WL_CONNECTED) {
+        Serial.println("WiFi reconnected");
+        return true;
+    }
+    Serial.println("WiFi reconnect failed");
+    return false;
+}
+
+void wifiPowerOff() {
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_OFF);
+    wifi_powered = false;
+    Serial.println("WiFi powered off");
 }
 
 static const uint8_t B64_LOOKUP[] = {
@@ -170,10 +198,7 @@ void showOffline() {
 
 bool pollMoodServer() {
     if (WiFi.status() != WL_CONNECTED) {
-        Serial.println("WiFi disconnected, reconnecting...");
-        WiFi.reconnect();
-        delay(3000);
-        if (WiFi.status() != WL_CONNECTED) return false;
+        if (!wifiReconnect()) return false;
     }
 
     HTTPClient http;
@@ -247,7 +272,7 @@ void handleSerial() {
 
         int colon = line.indexOf(':');
         if (colon < 0) {
-            Serial.println("Format: key:value (ssid, pass, host, port, agent) | reboot");
+            Serial.println("Format: key:value (ssid, pass, host, port, agent, poll) | reboot");
             continue;
         }
 
@@ -327,15 +352,20 @@ void loop() {
     if (force_poll) {
         Serial.println("Button press — forcing poll");
         last_display_key = "";
+        if (!wifi_powered) wifiReconnect();
     }
 
     if (force_poll || now - last_poll >= interval) {
+        if (!wifi_powered) wifiReconnect();
+
         last_poll = now;
         if (pollMoodServer()) {
             last_success = now;
         } else if (now - last_success > OFFLINE_TIMEOUT) {
             showOffline();
         }
+
+        wifiPowerOff();
     }
 
     delay(100);
