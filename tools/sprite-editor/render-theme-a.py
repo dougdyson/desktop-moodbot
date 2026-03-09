@@ -176,7 +176,7 @@ def draw_eyes(draw: ImageDraw.ImageDraw, emotion: str, activity: str, variant: i
     if emotion == "neutral" and variant == 3:
         draw_bezier(draw, (rx - 14, ry - 26), (rx, ry - 34), (rx + 14, ry - 26), 4)
 
-    if emotion == "positive" and variant == 2:
+    if emotion == "positive" and variant == 0:
         draw_bezier(draw, (rx - 14, ry - 26), (rx, ry - 34), (rx + 14, ry - 26), 4)
 
     if emotion == "elated":
@@ -212,12 +212,12 @@ def draw_mouth(draw: ImageDraw.ImageDraw, emotion: str, variant: int = 0):
 
     elif emotion == "positive":
         if variant == 0:
-            draw_bezier(draw, (42, base_y - 8), (cx, base_y + 42), (158, base_y - 8), 6)
+            draw_bezier(draw, (48, base_y - 2), (75, base_y + 20), (cx, base_y + 10), 6)
+            draw_bezier(draw, (cx, base_y + 10), (125, base_y + 35), (152, base_y - 10), 6)
         elif variant == 1:
             draw_open_mouth(draw, 44, 156, base_y - 6, base_y + 30, base_y + 50, 5)
         elif variant == 2:
-            draw_bezier(draw, (48, base_y - 2), (75, base_y + 20), (cx, base_y + 10), 6)
-            draw_bezier(draw, (cx, base_y + 10), (125, base_y + 35), (152, base_y - 10), 6)
+            draw_bezier(draw, (42, base_y - 8), (cx, base_y + 42), (158, base_y - 8), 6)
         else:
             draw_bezier(draw, (38, base_y - 10), (cx, base_y + 48), (162, base_y - 10), 7)
 
