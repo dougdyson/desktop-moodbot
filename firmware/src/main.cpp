@@ -3,13 +3,16 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include <Preferences.h>
+#include "esp_sleep.h"
+#include "driver/gpio.h"
 #include "config.h"
+
+RTC_DATA_ATTR bool was_deep_sleeping = false;
 
 Ink_Sprite* sprite = nullptr;
 Preferences prefs;
 
 uint32_t poll_interval_ms               = 30000;
-static const uint32_t SLEEP_POLL_MS     = 300000;
 static const uint32_t OFFLINE_TIMEOUT   = 300000;
 static const int      BITMAP_SIZE       = 5000;
 static const int      DISPLAY_W         = 200;
@@ -120,6 +123,19 @@ void wifiPowerOff() {
     WiFi.mode(WIFI_OFF);
     wifi_powered = false;
     Serial.println("WiFi powered off");
+}
+
+void enterDeepSleep() {
+    Serial.println("Entering deep sleep — press scroll wheel to wake");
+    Serial.flush();
+    wifiPowerOff();
+    M5.M5Ink.deepSleep();
+    delay(50);
+    was_deep_sleeping = true;
+    gpio_hold_en(GPIO_NUM_12);
+    gpio_deep_sleep_hold_en();
+    esp_sleep_enable_ext0_wakeup(GPIO_NUM_39, 0);
+    esp_deep_sleep_start();
 }
 
 static const uint8_t B64_LOOKUP[] = {
@@ -321,7 +337,16 @@ void setup() {
     Serial.begin(115200);
     delay(100);
 
-    Serial.println("\n=== Desktop MoodBot CoreInk ===");
+    esp_sleep_wakeup_cause_t wakeup = esp_sleep_get_wakeup_cause();
+    bool woke_from_sleep = (wakeup == ESP_SLEEP_WAKEUP_EXT0);
+
+    if (woke_from_sleep) {
+        Serial.println("\n=== MoodBot — woke from deep sleep ===");
+        gpio_hold_dis(GPIO_NUM_12);
+    } else {
+        Serial.println("\n=== Desktop MoodBot CoreInk ===");
+        was_deep_sleeping = false;
+    }
 
     if (!M5.M5Ink.isInit()) {
         Serial.println("E-ink init failed!");
@@ -329,12 +354,29 @@ void setup() {
     }
 
     sprite = new Ink_Sprite(&M5.M5Ink);
-    clearScreen();
+    if (!woke_from_sleep) {
+        clearScreen();
+    }
     sprite->creatSprite(0, 0, DISPLAY_W, DISPLAY_H);
 
     loadConfig();
-    printConfig();
-    connectWiFi();
+
+    if (woke_from_sleep) {
+        wifi_powered = false;
+        last_display_key = "";
+        if (wifiReconnect() && pollMoodServer()) {
+            last_success = millis();
+            if (is_sleeping) {
+                enterDeepSleep();
+            }
+            wifiPowerOff();
+        } else {
+            enterDeepSleep();
+        }
+    } else {
+        printConfig();
+        connectWiFi();
+    }
 
     last_success = millis();
 }
@@ -345,7 +387,6 @@ void loop() {
 
     static unsigned long last_poll = 0;
     unsigned long now = millis();
-    uint32_t interval = is_sleeping ? SLEEP_POLL_MS : poll_interval_ms;
     bool force_poll = M5.BtnMID.wasPressed() || M5.BtnUP.wasPressed() ||
                       M5.BtnDOWN.wasPressed() || M5.BtnEXT.wasPressed();
 
@@ -355,12 +396,15 @@ void loop() {
         if (!wifi_powered) wifiReconnect();
     }
 
-    if (force_poll || now - last_poll >= interval) {
+    if (force_poll || now - last_poll >= poll_interval_ms) {
         if (!wifi_powered) wifiReconnect();
 
         last_poll = now;
         if (pollMoodServer()) {
             last_success = now;
+            if (is_sleeping) {
+                enterDeepSleep();
+            }
         } else if (now - last_success > OFFLINE_TIMEOUT) {
             showOffline();
         }
