@@ -152,6 +152,27 @@ The enclosure wraps the CoreInk hardware. All enclosure dimensions MUST derive f
 - Wall thickness: 2mm (suitable for Creality Ender 3)
 - The reference model should be visible as a ghost overlay during design
 
+## Network Configuration (Dev Machine)
+
+**Mac Mini static IP: `192.168.0.35`** — reserved via DHCP reservation on the Hitron router (admin at `192.168.0.1`). The router always hands out this IP to the Mac Mini. Do NOT change the Mac's network settings to "Manual" — leave it on "Using DHCP" and let the router reservation handle it.
+
+**Hostname**: Set explicitly via `sudo scutil --set HostName Dougs-Mac-mini` to prevent DHCP from overriding it with random device names.
+
+### If the network IP changes (router reset, ISP change, etc.)
+
+All ESP32 units store the server IP in flash memory. If the Mac Mini's IP changes, every unit needs updating:
+
+1. Plug unit in via USB
+2. Find the port: `ls /dev/cu.usb*`
+3. Send the new IP: `stty -f /dev/cu.usbserial-XXXX 115200 && printf "host:NEW_IP\n" > /dev/cu.usbserial-XXXX`
+4. Reboot it: `stty -f /dev/cu.usbserial-XXXX 115200 && printf "reboot\n" > /dev/cu.usbserial-XXXX`
+
+**IMPORTANT**: You MUST set the baud rate with `stty -f ... 115200` before writing. A bare `echo > /dev/cu.usbserial-XXXX` will silently fail.
+
+### Before assuming the server is down
+
+Always `curl http://localhost:9400/mood/claude-code` first. The server may already be running.
+
 ## ESP32 Communication Protocol
 
 ### Endpoint
