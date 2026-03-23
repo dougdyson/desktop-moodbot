@@ -6,6 +6,7 @@
 #include "esp_sleep.h"
 #include "driver/gpio.h"
 #include "config.h"
+#include "version.h"
 
 RTC_DATA_ATTR bool was_deep_sleeping = false;
 
@@ -30,6 +31,17 @@ bool showing_offline = false;
 String last_display_key;
 bool wifi_powered = true;
 
+static const int BATTERY_PIN = 35;
+
+float readBatteryVoltage() {
+    uint32_t raw = 0;
+    for (int i = 0; i < 16; i++) {
+        raw += analogRead(BATTERY_PIN);
+    }
+    raw /= 16;
+    return raw * 25.1 / 5.1 / 4095.0 * 3.3;
+}
+
 void loadConfig() {
     prefs.begin("moodbot", true);
     wifi_ssid   = prefs.getString("ssid", WIFI_SSID);
@@ -48,13 +60,14 @@ void saveConfig(const char* key, const String& value) {
 }
 
 void printConfig() {
-    Serial.println("=== MoodBot Config ===");
+    Serial.printf("=== MoodBot Config (fw %s) ===\n", FIRMWARE_VERSION);
     Serial.printf("  ssid:  %s\n", wifi_ssid.c_str());
     Serial.printf("  pass:  %s\n", wifi_pass.length() > 0 ? "****" : "(empty)");
     Serial.printf("  host:  %s\n", moodbot_host.c_str());
     Serial.printf("  port:  %d\n", moodbot_port);
     Serial.printf("  agent: %s\n", agent_name.c_str());
     Serial.printf("  poll:  %lu ms\n", poll_interval_ms);
+    Serial.printf("  vbat:  %.2fV\n", readBatteryVoltage());
     Serial.println("Commands: ssid:<val>  pass:<val>  host:<val>  port:<val>  agent:<val>  poll:<ms>  reboot");
     Serial.println("======================");
 }
@@ -218,10 +231,12 @@ bool pollMoodServer() {
     }
 
     HTTPClient http;
-    char url[128];
-    snprintf(url, sizeof(url), "http://%s:%d/mood/%s?poll=%lu",
+    float vbat = readBatteryVoltage();
+    char url[160];
+    snprintf(url, sizeof(url), "http://%s:%d/mood/%s?poll=%lu&fw=%s&vbat=%.2f",
              moodbot_host.c_str(), moodbot_port, agent_name.c_str(),
-             poll_interval_ms / 1000);
+             poll_interval_ms / 1000, FIRMWARE_VERSION, vbat);
+    Serial.printf("Battery: %.2fV\n", vbat);
 
     Serial.printf("Polling: %s\n", url);
     http.begin(url);
@@ -341,10 +356,11 @@ void setup() {
     bool woke_from_sleep = (wakeup == ESP_SLEEP_WAKEUP_EXT0);
 
     if (woke_from_sleep) {
-        Serial.println("\n=== MoodBot — woke from deep sleep ===");
+        Serial.printf("\n=== Desktop MoodBot CoreInk v%s ===\n", FIRMWARE_VERSION);
+        Serial.println("Woke from deep sleep");
         gpio_hold_dis(GPIO_NUM_12);
     } else {
-        Serial.println("\n=== Desktop MoodBot CoreInk ===");
+        Serial.printf("\n=== Desktop MoodBot CoreInk v%s ===\n", FIRMWARE_VERSION);
         was_deep_sleeping = false;
     }
 

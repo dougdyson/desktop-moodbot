@@ -1,6 +1,7 @@
 import argparse
 import sys
 
+from core.state import MoodEngine
 from parsers.claude_code import ClaudeCodeParser
 from watcher.monitor import AgentMonitor, WatcherLoop
 from server.app import run_server, set_watcher
@@ -20,10 +21,16 @@ def main() -> None:
     parser.add_argument(
         "--interval", type=float, default=10.0, help="File poll interval in seconds (default: 10)"
     )
+    parser.add_argument(
+        "--no-sleep", action="store_true", help="Never return sleeping=true (for battery testing)"
+    )
     args = parser.parse_args()
 
+    sleep_timeout = float("inf") if args.no_sleep else None
+    engine_kwargs = {"sleep_timeout": sleep_timeout} if sleep_timeout else {}
+
     monitors = [
-        AgentMonitor("claude-code", ClaudeCodeParser()),
+        AgentMonitor("claude-code", ClaudeCodeParser(), engine=MoodEngine(**engine_kwargs)),
     ]
 
     watcher = WatcherLoop(monitors, interval=args.interval)
@@ -33,6 +40,8 @@ def main() -> None:
     print(f"Moodbot server starting on {args.host}:{args.port}")
     print(f"Agents: {', '.join(watcher.agent_names)}")
     print(f"Poll interval: {args.interval}s")
+    if args.no_sleep:
+        print("Sleep disabled (battery test mode)")
     print(f"Try: curl http://localhost:{args.port}/mood/claude-code")
 
     server = run_server(host=args.host, port=args.port)

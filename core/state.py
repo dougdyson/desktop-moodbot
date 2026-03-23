@@ -125,12 +125,13 @@ class MoodEngine:
         )
 
     def _is_sleeping(self, session: ParsedSession) -> bool:
+        if session.last_modified:
+            file_elapsed = time.time() - session.last_modified
+            if file_elapsed < self.sleep_timeout:
+                return False
+
         last_time = session.last_activity_time
         if not last_time:
-            # No parsed messages yet — fall back to file modification time
-            if session.last_modified:
-                elapsed = time.time() - session.last_modified
-                return elapsed > self.sleep_timeout
             return True
         now = datetime.now(timezone.utc)
         if last_time.tzinfo is None:

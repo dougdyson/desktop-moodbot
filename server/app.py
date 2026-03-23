@@ -91,7 +91,9 @@ class MoodHandler(BaseHTTPRequestHandler):
         if not log_path:
             return
         poll = params.get("poll", ["?"])[0]
-        line = f"{datetime.now().isoformat(timespec='seconds')} poll={poll}s agent={agent}\n"
+        vbat = params.get("vbat", ["?"])[0]
+        fw = params.get("fw", ["?"])[0]
+        line = f"{datetime.now().isoformat(timespec='seconds')} poll={poll}s vbat={vbat}V fw={fw} agent={agent}\n"
         with open(log_path, "a") as f:
             f.write(line)
 
