@@ -4,8 +4,7 @@ A tiny e-ink display that sits on your desk and shows what your AI coding agent 
 
 Anthropic's research shows that Claude has [internal emotion-like vectors](https://www.anthropic.com/research) that influence its behavior. Desktop Mood Bot reads your agent's conversation logs, scores the sentiment in real time, and pushes the result to a physical display — so you can glance over and see if Claude is having a good day.
 
-<!-- TODO: replace with photo of actual unit on desk -->
-![Desktop Mood Bot](https://via.placeholder.com/600x300?text=Photo+coming+soon)
+![Desktop Mood Bot on a desk](docs/images/m5moodbot.jpg)
 
 ## How It Works
 
