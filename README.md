@@ -50,7 +50,7 @@ curl http://localhost:9400/mood/claude-code
 
 ### What You Need
 
-- **M5Stack CoreInk** — 200x200px e-ink display with ESP32, WiFi, and 390mAh battery (~$30)
+- **[M5Stack CoreInk](https://docs.m5stack.com/en/core/coreink)** — 200x200px e-ink display with ESP32, WiFi, and 390mAh battery (~$30)
 - **USB-C cable** for flashing firmware and power
 - **3D printed enclosure** (optional) — STL files in `hardware/enclosures/`
 
