@@ -9,6 +9,10 @@ build/
 .venv/
 venv/
 .env
-*.stl
 .DS_Store
+.claude/
+.pytest_cache/
+battery-test.log
+battery-test.md
 battery_test.log
+sprites/tools/preview/*.png

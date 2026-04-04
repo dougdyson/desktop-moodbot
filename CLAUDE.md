@@ -2,27 +2,11 @@
 
 This file provides guidance to Claude Code when working with the desktop-moodbot repository.
 
-## CRITICAL: Two Contexts — Don't Confuse Them
-
-This project has two distinct contexts. Mixing them up causes real problems.
-
-### 1. THE PRODUCT (code in this repo)
-Desktop Mood Bot is a **standalone, lightweight Python service** with **no database**. It reads JSONL files, computes mood state, pushes to displays. The product code in this repo must never depend on PostgreSQL, Ziggy, or kokoro-tts.
-
-### 2. PROJECT MANAGEMENT (external infrastructure)
-We track todos, requirements, and project entities in an **external PostgreSQL database called `ada`**, managed via MCP tools and the kokoro-tts codebase. This is how Duggy manages all his projects — it's the project management system, not part of the product.
-
-**Rule of thumb**: If you're writing product code (sentiment scoring, file watching, publishers), you're in Context 1. If you're creating todos, updating entities, or checking requirements, you're in Context 2.
-
----
-
-# Context 1: The Product
-
 ## Project Overview
 
-Desktop Mood Bot (DTMB) is a standalone, lightweight Python service that reads AI coding agent conversation logs, computes a combined mood state (activity × emotion), and pushes it to display subscribers — a dashboard widget via SSE, or an M5Stack CoreInk e-ink display via HTTP.
+Desktop Mood Bot (DTMB) is a standalone, lightweight Python service that reads AI coding agent conversation logs, computes a combined mood state (activity x emotion), and pushes it to display subscribers — a dashboard widget via SSE, or an M5Stack CoreInk e-ink display via HTTP.
 
-This is an **open-source product**. No database, no Ziggy dependency, no kokoro-tts dependency.
+This is an **open-source product**. No database dependency.
 
 ## Key Design Decision: One Device Per Agent
 
@@ -42,7 +26,7 @@ desktop-moodbot/
   core/              # Mood state computation (shared across agents)
     sentiment.py     # VADER scoring + rolling window + hysteresis
     activity.py      # Tool-use classification into Big 6 states
-    state.py         # 6 activities × 5 emotions matrix + variant pooling
+    state.py         # 6 activities x 5 emotions matrix + variant pooling
   parsers/           # Agent-specific JSONL parsers
     base.py          # Abstract parser interface
     claude_code.py   # Claude Code JSONL parser
@@ -68,10 +52,10 @@ Derived from analysis of 68,475 real events across 1,110 Claude Code sessions.
 | System | committing, testing, planning, delegating, browsing | 4.7% |
 
 Long-tail collapse rules:
-- committing/writing → editing
-- testing → executing
-- planning/managing → thinking
-- browsing/delegating → reading
+- committing/writing -> editing
+- testing -> executing
+- planning/managing -> thinking
+- browsing/delegating -> reading
 
 ### Emotion Bands: 5 (collapsed from 9)
 
@@ -87,7 +71,7 @@ Transition matrix confirmed adjacency-only movement. 9 bands had imperceptible v
 
 ### Visual State Matrix
 
-6 activities × 5 emotions = 30 base states, plus variant pooling for high-frequency combos:
+6 activities x 5 emotions = 30 base states, plus variant pooling for high-frequency combos:
 - Neutral (35% dwell): 3-4 variants
 - Positive (45% dwell): 3-4 variants
 - Uneasy (15% dwell): 2 variants
@@ -111,7 +95,7 @@ Transition matrix confirmed adjacency-only movement. 9 bands had imperceptible v
 - 17.5 band changes per 100 messages
 - Mean 2.8 changes per session
 - Median time between band changes: 2.0 minutes
-- 70% of changes happen within 5 minutes → 5-min polling interval is well-calibrated
+- 70% of changes happen within 5 minutes -> 5-min polling interval is well-calibrated
 - Sentiment mostly oscillates between adjacent bands; large jumps are extremely rare
 
 ## Data Sources
@@ -124,8 +108,8 @@ Start with Claude Code support only.
 
 ## Hardware Target
 
-- **Display**: M5Stack CoreInk — 200×200px black/white e-ink, ESP32-PICO-D4, WiFi, 390mAh battery
-- **Housing**: 3D printed (Creality Ender 3), brand-colored per agent
+- **Display**: M5Stack CoreInk — 200x200px black/white e-ink, ESP32-PICO-D4, WiFi, 390mAh battery
+- **Housing**: 3D printed, brand-colored per agent
 - Simple mascot/smiley style faces, generated not hand-drawn
 - Activity shown through expression (eyes scanning = reading, mouth open = talking)
 - Emotion shown through valence (smile vs frown, relaxed vs tense)
@@ -139,7 +123,7 @@ The enclosure wraps the CoreInk hardware. All enclosure dimensions MUST derive f
 - **Height (Z)**: 56mm (tall axis)
 - **Depth (Y)**: 16mm (thickness)
 
-**Display**: 27.6 × 27.6mm active area, centered horizontally, in the **upper portion** of the front face (center ~36mm from bottom)
+**Display**: 27.6 x 27.6mm active area, centered horizontally, in the **upper portion** of the front face (center ~36mm from bottom)
 
 **Ports and buttons**:
 - USB-C: bottom edge, center
@@ -149,29 +133,8 @@ The enclosure wraps the CoreInk hardware. All enclosure dimensions MUST derive f
 **Enclosure design rules**:
 - All cutout positions derive from the reference model, not freehand
 - Enclosure = shell around hardware + tolerance (0.3mm typical)
-- Wall thickness: 2mm (suitable for Creality Ender 3)
+- Wall thickness: 2mm (suitable for FDM printers)
 - The reference model should be visible as a ghost overlay during design
-
-## Network Configuration (Dev Machine)
-
-**Mac Mini static IP: `192.168.0.35`** — reserved via DHCP reservation on the Hitron router (admin at `192.168.0.1`). The router always hands out this IP to the Mac Mini. Do NOT change the Mac's network settings to "Manual" — leave it on "Using DHCP" and let the router reservation handle it.
-
-**Hostname**: Set explicitly via `sudo scutil --set HostName Dougs-Mac-mini` to prevent DHCP from overriding it with random device names.
-
-### If the network IP changes (router reset, ISP change, etc.)
-
-All ESP32 units store the server IP in flash memory. If the Mac Mini's IP changes, every unit needs updating:
-
-1. Plug unit in via USB
-2. Find the port: `ls /dev/cu.usb*`
-3. Send the new IP: `stty -f /dev/cu.usbserial-XXXX 115200 && printf "host:NEW_IP\n" > /dev/cu.usbserial-XXXX`
-4. Reboot it: `stty -f /dev/cu.usbserial-XXXX 115200 && printf "reboot\n" > /dev/cu.usbserial-XXXX`
-
-**IMPORTANT**: You MUST set the baud rate with `stty -f ... 115200` before writing. A bare `echo > /dev/cu.usbserial-XXXX` will silently fail.
-
-### Before assuming the server is down
-
-Always `curl http://localhost:9400/mood/claude-code` first. The server may already be running.
 
 ## ESP32 Communication Protocol
 
@@ -190,17 +153,17 @@ ESP32 polls `GET /mood/<agent>` (e.g. `/mood/claude-code`). Returns:
 
 ### Image Transfer
 - ~40 sprites preloaded on ESP32 flash (~200KB, ESP32 has 4MB+)
-- `bitmap: null` → use preloaded sprite (activity/emotion/variant lookup)
-- `bitmap: "<base64>"` → server-sent override (~5KB), enables face updates without firmware push
+- `bitmap: null` -> use preloaded sprite (activity/emotion/variant lookup)
+- `bitmap: "<base64>"` -> server-sent override (~5KB), enables face updates without firmware push
 
 ### Discovery
 - **mDNS primary**: server advertises as `moodbot.local`, zero config for users
-- **IP fallback**: hold side button on boot → config AP → set static IP via web page
+- **IP fallback**: hold side button on boot -> config AP -> set static IP via web page
 
 ### WiFi Dropout
-1. Connected → normal mood display
-2. Briefly disconnected (< 5 min) → hold last state (e-ink retains image at zero power)
-3. Offline (> 5 min) → show offline/disconnected face
+1. Connected -> normal mood display
+2. Briefly disconnected (< 5 min) -> hold last state (e-ink retains image at zero power)
+3. Offline (> 5 min) -> show offline/disconnected face
 
 ### OTA Firmware Updates
 - ESP32 checks `GET /firmware/latest?device=<agent>` on boot
@@ -209,10 +172,10 @@ ESP32 polls `GET /mood/<agent>` (e.g. `/mood/claude-code`). Returns:
 ### Power Management
 - **USB powered** (primary): poll every 30 seconds
 - **Battery mode** (detected by voltage): deep sleep between polls, wake every 2-3 min
-- Deep sleep ~10μA → battery lasts days; e-ink holds image at zero power
+- Deep sleep ~10uA -> battery lasts days; e-ink holds image at zero power
 
 ### Sleep Mode
-- 30 min of no JSONL activity → server returns `sleeping: true`
+- 30 min of no JSONL activity -> server returns `sleeping: true`
 - ESP32 shows sleep face, reduces polling to every 5 minutes
 - First new activity wakes on next poll
 
@@ -225,32 +188,16 @@ ESP32 polls `GET /mood/<agent>` (e.g. `/mood/claude-code`). Returns:
 - **Docker-first**: `docker run -v ~/.claude:... desktopmoodbot/server` for one-line setup
 - **Also supports**: `pip install` + `moodbot serve` CLI
 
-## Development Environment
-
-**This product has its own conda environment. NEVER use kokoro-tts or any other project's environment.**
+## Development
 
 ```bash
-conda activate desktop-moodbot
-```
-
-If the env doesn't exist yet:
-```bash
-conda create -n desktop-moodbot python=3.10 -y
-conda activate desktop-moodbot
-pip install vaderSentiment
-```
-
-To run the server:
-```bash
-conda activate desktop-moodbot
+pip install -e ".[dev]"
 python __main__.py
 ```
 
 ## Port Assignment
 
-**Default port: 9400.** Do NOT use popular ports (8080, 3000, 5000, etc.) — this dev machine runs ~20 services and common ports are always taken. The moodbot uses **9400** to avoid collisions.
-
-The ziggy-web widget connects to `NEXT_PUBLIC_MOODBOT_URL` (default `http://localhost:9400`).
+**Default port: 9400.**
 
 ## Code Style
 
@@ -258,122 +205,3 @@ The ziggy-web widget connects to `NEXT_PUBLIC_MOODBOT_URL` (default `http://loca
 - Follow existing patterns
 - Type hints on all new functions
 - Tests for new functionality
-
----
-
-# Context 2: Project Management Infrastructure
-
-Everything below is about how we **manage this project** — tracking todos, requirements, and entities. None of this belongs in the product code.
-
-## Ada Database Access
-
-Project metadata, todos, and entities live in the **ada** PostgreSQL database (shared across all of Duggy's projects).
-
-```bash
-psql -d ada
-```
-
-**NEVER use `psql -d postgres`** — that's the system database.
-
-When running Python scripts that need database access (psycopg2, etc.), use the kokoro-tts conda environment:
-
-```bash
-/opt/homebrew/Caskroom/miniconda/base/envs/kokoro-tts-py310/bin/python script.py
-```
-
-**NEVER use bare `python` or `python3`** — they won't have psycopg2 or other database dependencies.
-
-## Todo Management — Use MCP Server
-
-**ALWAYS use the MCP todo server (`mcp__todo-server__todo_add`) to create todos, NOT direct SQL.**
-
-Why:
-- MCP server automatically creates timeline entries for new todos
-- Direct SQL bypasses timeline logging, breaking daily briefings
-- MCP server handles task_number assignment automatically
-
-**Duggy is on 6-week medical leave. NEVER create todos with task_type='work'.**
-
-When creating todos via MCP server:
-- ALWAYS set `task_type: "personal"`
-- Vacation mode filters out work tasks from the UI
-
-**Linking todos to this project:** After creating via MCP, do TWO things:
-
-1. Link to the Desktop Mood Bot project entity:
-```sql
-INSERT INTO entity_relationships (from_entity_id, to_entity_id, relationship_type)
-VALUES ('<new_todo_entity_id>', 'f50748b6-74e9-4ee0-a344-91ad9b63cee9', 'belongs_to');
-```
-
-2. Add to the frontlog (if it's an active priority) via REST endpoint:
-```bash
-# Get current frontlog
-curl http://localhost:8765/v1/frontlog
-
-# Replace frontlog with new ordered list
-curl -X POST http://localhost:8765/v1/frontlog \
-  -H "Content-Type: application/json" \
-  -d '[{"item_type": "todo", "task_number": 1152}, {"item_type": "todo", "task_number": 1161}]'
-```
-
-Other useful frontlog endpoints:
-- `POST /v1/frontlog/autofill` — auto-populate with ranked items
-- `POST /v1/frontlog/refresh` — rebuild from scratch
-- `POST /v1/frontlog/dismiss` — "not right now" with TTL
-
-The frontlog is a **curated, ordered list** — creating a todo and linking it to the project does NOT automatically add it to the frontlog. The frontlog is what drives the ziggy-web UI and session planning.
-
-Project entity ID: `f50748b6-74e9-4ee0-a344-91ad9b63cee9`
-
-## Entity CRUD — Use Service Functions
-
-**ALWAYS use `db/entities/core.py` functions (in kokoro-tts repo) for entity operations, NOT raw SQL.**
-
-Why:
-- `create_entity()` logs to timeline AND generates summary + summary_embedding
-- `update_entity()` logs to timeline AND regenerates summary/embedding
-- Raw SQL bypasses both
-
-For relationships, raw SQL is fine.
-
-## Branch Naming & Workflow
-
-**ALWAYS create a feature branch when working on ANY todo. NEVER commit work directly to main.**
-
-### Branch naming convention:
-```
-feature/{task_number}-{slugified-todo-title}
-```
-
-Examples:
-- Todo #1150 "Create desktop-moodbot standalone repo + architecture" → `feature/1150-create-desktop-moodbot-standalone-repo-architecture`
-
-**The FIRST thing you do after picking up a todo is `git checkout -b feature/{task_number}-{slug}`. Do this BEFORE writing any code.**
-
-### Todo completion protocol:
-
-**Only mark a todo as completed when the feature branch is merged into main.**
-
-Do NOT complete todos when:
-- Making commits during development
-- Finishing a coding session
-- The feature "works" but hasn't been merged
-
-Workflow:
-1. Create feature branch: `feature/{task_number}-{slug}`
-2. Make commits as needed (todo stays open)
-3. When work is complete, **ask user to initiate close-out**
-4. User approves → merge to main + mark todo as completed
-
-**Close-out (merge + complete) is a shared decision. Never merge to main or mark a todo as completed without explicit user approval.**
-
-## No Destructive Operations Without Approval
-
-**NEVER DELETE, UPDATE, or modify production data without explicit user approval.**
-
-Before any destructive database operation:
-1. Show what will be affected (run a SELECT first)
-2. Ask for approval before executing
-3. Use precise filters (date, specific IDs)
-4. Prefer soft deletes (`is_active = FALSE`)

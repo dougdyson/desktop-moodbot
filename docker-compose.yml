@@ -1,0 +1,8 @@
+services:
+  moodbot:
+    build: .
+    ports:
+      - "9400:9400"
+    volumes:
+      - ~/.claude/projects:/data/projects:ro
+    restart: unless-stopped

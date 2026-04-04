@@ -1,5 +1,7 @@
 import argparse
+import os
 import sys
+from pathlib import Path
 
 from core.state import MoodEngine
 from parsers.claude_code import ClaudeCodeParser
@@ -29,8 +31,11 @@ def main() -> None:
     sleep_timeout = float("inf") if args.no_sleep else None
     engine_kwargs = {"sleep_timeout": sleep_timeout} if sleep_timeout else {}
 
+    claude_path = os.environ.get("CLAUDE_PROJECTS_PATH")
+    claude_base = Path(claude_path) if claude_path else None
+
     monitors = [
-        AgentMonitor("claude-code", ClaudeCodeParser(), engine=MoodEngine(**engine_kwargs)),
+        AgentMonitor("claude-code", ClaudeCodeParser(base_path=claude_base), engine=MoodEngine(**engine_kwargs)),
     ]
 
     watcher = WatcherLoop(monitors, interval=args.interval)
