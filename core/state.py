@@ -6,7 +6,8 @@ from typing import Optional
 
 from parsers.base import Activity, ParsedMessage, ParsedSession
 from sprites.manifest import SpriteManifest
-from .sentiment import EmotionBand, SentimentScorer
+from .sentiment import EmotionBand, SentimentScorer, score_to_band
+from .signals import compute_failure_modifier, compute_context_modifier
 
 VARIANT_COUNTS = {
     EmotionBand.NEGATIVE: 1,
@@ -91,11 +92,17 @@ class MoodEngine:
         self.scorer.reset()
 
         for msg in session.messages:
-            if msg.text:
+            if msg.role == "assistant" and msg.text:
                 self.scorer.add_message(msg.text)
-            self._last_activity = msg.activity
+            if msg.role == "assistant":
+                self._last_activity = msg.activity
 
-        emotion = self.scorer.current_band
+        base_score = self.scorer.current_score
+        failure_mod = compute_failure_modifier(session.messages)
+        context_mod = compute_context_modifier(session.messages)
+        modified_score = base_score + failure_mod + context_mod
+
+        emotion = score_to_band(modified_score)
         activity = self._last_activity
         sleeping = self._is_sleeping(session)
 
@@ -121,7 +128,7 @@ class MoodEngine:
             sleeping=sleeping,
             emoji=emoji,
             bitmap=bitmap,
-            sentiment_score=self.scorer.current_score,
+            sentiment_score=modified_score,
         )
 
     def _is_sleeping(self, session: ParsedSession) -> bool:

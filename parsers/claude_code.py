@@ -93,7 +93,12 @@ class ClaudeCodeParser(AgentParser):
         return entries
 
     def _parse_entry(self, entry: dict) -> Optional[ParsedMessage]:
-        if entry.get("type") != "assistant":
+        entry_type = entry.get("type")
+
+        if entry_type == "user":
+            return self._parse_user_entry(entry)
+
+        if entry_type != "assistant":
             return None
 
         timestamp = self._parse_timestamp(entry.get("timestamp"))
@@ -124,7 +129,6 @@ class ClaudeCodeParser(AgentParser):
                 cleaned = self._clean_text(raw_text)
                 if cleaned and not self._is_tool_call_boilerplate(cleaned):
                     text_parts.append(cleaned)
-                if not has_thinking:
                     activity = Activity.CONVERSING
 
             elif block_type == "tool_use":
@@ -143,6 +147,60 @@ class ClaudeCodeParser(AgentParser):
             text=text,
             activity=activity,
             tool_name=tool_name,
+        )
+
+    def _parse_user_entry(self, entry: dict) -> Optional[ParsedMessage]:
+        timestamp = self._parse_timestamp(entry.get("timestamp"))
+        if not timestamp:
+            return None
+
+        message = entry.get("message", {})
+        content_blocks = message.get("content", [])
+        if not isinstance(content_blocks, list):
+            return None
+
+        for block in content_blocks:
+            if not isinstance(block, dict):
+                continue
+
+            block_type = block.get("type")
+
+            if block_type == "tool_result" and block.get("is_error"):
+                tool_name = block.get("tool_use_id", None)
+                error_text = block.get("content", "")
+                if isinstance(error_text, list):
+                    error_text = " ".join(
+                        b.get("text", "") for b in error_text if isinstance(b, dict)
+                    )
+                return ParsedMessage(
+                    timestamp=timestamp,
+                    text=str(error_text)[:MAX_MESSAGE_LENGTH],
+                    activity=Activity.EXECUTING,
+                    role="tool_result",
+                    is_error=True,
+                )
+
+        text_parts = []
+        for block in content_blocks:
+            if not isinstance(block, dict):
+                continue
+            if block.get("type") == "text":
+                raw_text = block.get("text", "")
+                cleaned = self._clean_text(raw_text)
+                if cleaned:
+                    text_parts.append(cleaned)
+
+        text = " ".join(text_parts)
+        if len(text) < MIN_MESSAGE_LENGTH:
+            return None
+
+        text = text[:MAX_MESSAGE_LENGTH]
+
+        return ParsedMessage(
+            timestamp=timestamp,
+            text=text,
+            activity=Activity.CONVERSING,
+            role="user",
         )
 
     def _classify_tool(self, tool_name: str, tool_input: dict) -> Activity:

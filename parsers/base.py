@@ -21,6 +21,8 @@ class ParsedMessage:
     text: str
     activity: Activity
     tool_name: Optional[str] = None
+    role: str = "assistant"
+    is_error: bool = False
 
 
 @dataclass

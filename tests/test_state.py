@@ -148,11 +148,12 @@ class TestMoodEngine:
         if VARIANT_COUNTS.get(EmotionBand(mood.emotion), 1) > 1:
             assert len(variants_seen) > 1
 
-    def test_bitmap_is_none_by_default(self):
+    def test_bitmap_present_when_sprites_exist(self):
         engine = MoodEngine()
         session = _make_session(minutes_ago=1)
         mood = engine.compute(session)
-        assert mood.bitmap is None
+        assert isinstance(mood.bitmap, str)
+        assert len(mood.bitmap) > 0
 
     def test_timestamp_is_iso_format(self):
         engine = MoodEngine()
@@ -187,6 +188,75 @@ class TestMoodEngine:
         for act in activities:
             for emo in emotions:
                 assert (act, emo) in EMOJI_MATRIX, f"Missing emoji for ({act}, {emo})"
+
+    def test_compute_with_failure_signals(self):
+        engine = MoodEngine()
+        now = datetime.now(timezone.utc)
+        messages = [
+            ParsedMessage(
+                timestamp=now,
+                text="Neutral technical response here",
+                activity=Activity.CONVERSING,
+            )
+            for _ in range(10)
+        ]
+        for _ in range(5):
+            messages.append(ParsedMessage(
+                timestamp=now,
+                text="Error: command failed",
+                activity=Activity.EXECUTING,
+                role="tool_result",
+                is_error=True,
+            ))
+        session_with_errors = _make_session(messages=messages)
+
+        clean_messages = [
+            ParsedMessage(
+                timestamp=now,
+                text="Neutral technical response here",
+                activity=Activity.CONVERSING,
+            )
+            for _ in range(15)
+        ]
+        session_clean = _make_session(messages=clean_messages)
+
+        mood_errors = engine.compute(session_with_errors)
+        mood_clean = engine.compute(session_clean)
+        assert mood_errors.sentiment_score < mood_clean.sentiment_score
+
+    def test_compute_with_positive_context(self):
+        engine = MoodEngine()
+        now = datetime.now(timezone.utc)
+        messages = [
+            ParsedMessage(
+                timestamp=now,
+                text="Neutral technical response here",
+                activity=Activity.CONVERSING,
+            )
+            for _ in range(10)
+        ]
+        for _ in range(5):
+            messages.append(ParsedMessage(
+                timestamp=now,
+                text="Thanks so much, that's perfect and amazing!",
+                activity=Activity.CONVERSING,
+                role="user",
+            ))
+        session = _make_session(messages=messages)
+
+        clean_messages = [
+            ParsedMessage(
+                timestamp=now,
+                text="Neutral technical response here",
+                activity=Activity.CONVERSING,
+            )
+            for _ in range(15)
+        ]
+        session_clean = _make_session(messages=clean_messages)
+
+        mood_with_context = engine.compute(session)
+        mood_clean = engine.compute(session_clean)
+        assert mood_with_context.sentiment_score > mood_clean.sentiment_score
 
     def test_reset_between_sessions(self):
         engine = MoodEngine()

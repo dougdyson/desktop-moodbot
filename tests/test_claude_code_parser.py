@@ -136,9 +136,22 @@ class TestEntryParsing:
         assert session.messages[0].timestamp.minute == 30
         assert session.messages[0].timestamp.second == 45
 
-    def test_skips_user_entries(self, tmp_path):
+    def test_parses_user_entries(self, tmp_path):
         lines = [
-            _make_user_entry("Hello there"),
+            _make_user_entry("Thanks, that works perfectly for my use case"),
+            _make_assistant_entry(text="This is a valid response with enough text"),
+        ]
+        path = _write_session(tmp_path, lines)
+
+        parser = ClaudeCodeParser(base_path=tmp_path)
+        session = parser.parse_session(path)
+        assert len(session.messages) == 2
+        assert session.messages[0].role == "user"
+        assert session.messages[1].role == "assistant"
+
+    def test_skips_short_user_entries(self, tmp_path):
+        lines = [
+            _make_user_entry("Hello"),
             _make_assistant_entry(text="This is a valid response with enough text"),
         ]
         path = _write_session(tmp_path, lines)
@@ -146,6 +159,7 @@ class TestEntryParsing:
         parser = ClaudeCodeParser(base_path=tmp_path)
         session = parser.parse_session(path)
         assert len(session.messages) == 1
+        assert session.messages[0].role == "assistant"
 
     def test_skips_system_entries(self, tmp_path):
         lines = [
@@ -368,6 +382,67 @@ class TestParsedSession:
         parser = ClaudeCodeParser(base_path=tmp_path)
         session = parser.parse_session(path)
         assert session.file_path == path
+
+
+def _make_tool_result_entry(is_error=False, content="Error: command failed", timestamp=None):
+    ts = timestamp or "2026-02-20T14:31:00.000Z"
+    return json.dumps({
+        "type": "user",
+        "timestamp": ts,
+        "message": {
+            "role": "user",
+            "content": [{
+                "type": "tool_result",
+                "tool_use_id": "toolu_123",
+                "is_error": is_error,
+                "content": content,
+            }],
+        },
+    })
+
+
+class TestUserMessageParsing:
+    def test_parse_user_text_message(self, tmp_path):
+        lines = [
+            _make_user_entry("Thanks, that's exactly what I needed for the project"),
+            _make_assistant_entry(text="This is a valid response with enough text"),
+        ]
+        path = _write_session(tmp_path, lines)
+
+        parser = ClaudeCodeParser(base_path=tmp_path)
+        session = parser.parse_session(path)
+
+        user_msgs = [m for m in session.messages if m.role == "user"]
+        assert len(user_msgs) == 1
+        assert user_msgs[0].activity == Activity.CONVERSING
+        assert "exactly what I needed" in user_msgs[0].text
+
+    def test_parse_tool_result_error(self, tmp_path):
+        lines = [
+            _make_assistant_entry(tool_name="Bash", tool_input={"command": "npm test"}),
+            _make_tool_result_entry(is_error=True, content="Error: tests failed"),
+        ]
+        path = _write_session(tmp_path, lines)
+
+        parser = ClaudeCodeParser(base_path=tmp_path)
+        session = parser.parse_session(path)
+
+        error_msgs = [m for m in session.messages if m.is_error]
+        assert len(error_msgs) == 1
+        assert error_msgs[0].role == "tool_result"
+
+    def test_parse_tool_result_success(self, tmp_path):
+        lines = [
+            _make_assistant_entry(tool_name="Read", tool_input={"file_path": "/tmp/x"}),
+            _make_tool_result_entry(is_error=False, content="file contents here"),
+        ]
+        path = _write_session(tmp_path, lines)
+
+        parser = ClaudeCodeParser(base_path=tmp_path)
+        session = parser.parse_session(path)
+
+        error_msgs = [m for m in session.messages if m.is_error]
+        assert len(error_msgs) == 0
 
 
 class TestEdgeCases:
