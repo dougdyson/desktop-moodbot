@@ -5,6 +5,7 @@ from pathlib import Path
 
 from core.state import MoodEngine
 from parsers.claude_code import ClaudeCodeParser
+from parsers.opencode import OpenCodeParser
 from watcher.monitor import AgentMonitor, WatcherLoop
 from server.app import run_server, set_watcher
 
@@ -34,8 +35,12 @@ def main() -> None:
     claude_path = os.environ.get("CLAUDE_PROJECTS_PATH")
     claude_base = Path(claude_path) if claude_path else None
 
+    opencode_db = os.environ.get("OPENCODE_DB_PATH")
+    opencode_db_path = Path(opencode_db) if opencode_db else None
+
     monitors = [
         AgentMonitor("claude-code", ClaudeCodeParser(base_path=claude_base), engine=MoodEngine(**engine_kwargs)),
+        AgentMonitor("opencode", OpenCodeParser(db_path=opencode_db_path), engine=MoodEngine(**engine_kwargs)),
     ]
 
     watcher = WatcherLoop(monitors, interval=args.interval)
